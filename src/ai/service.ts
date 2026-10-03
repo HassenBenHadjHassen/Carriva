@@ -1,20 +1,30 @@
 import { AIProvider } from './provider';
 import { MockAIProvider } from './providers/mock';
 import { GoogleAIProvider } from './providers/google';
+import { OpenAIProvider } from './providers/openai';
+import { AnthropicAIProvider } from './providers/anthropic';
 import { ResumeProfileSchema, ResumeProfileType, JobExtractionSchema, JobExtractionType, JobAnalysisSchema, JobAnalysisType } from './schemas';
 
 export class AIService {
   private provider: AIProvider;
 
   constructor() {
-    const providerName = process.env.AI_PROVIDER || 'mock';
-    if (providerName.toLowerCase() === 'google') {
+    const providerName = process.env.AI_PROVIDER?.toLowerCase();
+
+    if (!providerName) {
+      throw new Error("AI_PROVIDER environment variable is not set. Valid options: mock, google, openai, anthropic");
+    }
+
+    if (providerName === 'google') {
       this.provider = new GoogleAIProvider();
-    } else if (providerName.toLowerCase() === 'mock') {
+    } else if (providerName === 'openai') {
+      this.provider = new OpenAIProvider();
+    } else if (providerName === 'anthropic') {
+      this.provider = new AnthropicAIProvider();
+    } else if (providerName === 'mock') {
       this.provider = new MockAIProvider();
     } else {
-      console.warn(`Provider ${providerName} not yet implemented, falling back to mock.`);
-      this.provider = new MockAIProvider();
+      throw new Error(`Unsupported AI provider: ${providerName}`);
     }
   }
 

@@ -1,18 +1,18 @@
 import { generateObject, generateText } from 'ai';
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { createOpenAI } from '@ai-sdk/openai';
 import { AIProvider, StructuredGenerationRequest, TextGenerationRequest } from '../provider';
 
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_AI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+const openai = createOpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
-export class GoogleAIProvider implements AIProvider {
+export class OpenAIProvider implements AIProvider {
   async generateStructured<T>(request: StructuredGenerationRequest<T>): Promise<T> {
-    console.log(`[GoogleAI] Generating structured data for schema: ${request.schemaName}`);
-    const modelName = process.env.AI_MODEL || 'gemini-2.5-flash';
+    console.log(`[OpenAI] Generating structured data for schema: ${request.schemaName}`);
+    const modelName = process.env.AI_MODEL || 'gpt-4o-mini';
     
     const { object } = await generateObject({
-      model: google(modelName),
+      model: openai(modelName),
       schema: request.schema as any,
       system: request.systemPrompt,
       prompt: request.prompt,
@@ -22,11 +22,11 @@ export class GoogleAIProvider implements AIProvider {
   }
 
   async generateText(request: TextGenerationRequest): Promise<string> {
-    console.log(`[GoogleAI] Generating text`);
-    const modelName = process.env.AI_MODEL || 'gemini-2.5-flash';
+    console.log(`[OpenAI] Generating text`);
+    const modelName = process.env.AI_MODEL || 'gpt-4o-mini';
     
     const { text } = await generateText({
-      model: google(modelName),
+      model: openai(modelName),
       system: request.systemPrompt,
       prompt: request.prompt,
     });
