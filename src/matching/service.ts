@@ -53,11 +53,11 @@ export class MatchingService {
       throw new Error("Profile or Job not found");
     }
 
+    const { MATCHING_VERSION } = await import('../config/constants');
     const cacheKey = `match:${profile.userId}:${profile.id}:${profile.version}:${job.hash}:${MATCHING_VERSION}`;
     
     const analysis = await cacheService.getOrSet(cacheKey, async () => {
       const userSkills = profile.user?.userSkills || [];
-      // Combine confirmed, inferred, and generated skills, prioritizing confirmed
       const trustedSkills = new Set(
         userSkills
           .filter(us => ['confirmed', 'inferred', 'generated'].includes(us.confidence))
@@ -70,7 +70,6 @@ export class MatchingService {
           .map(us => this.normalizeSkill(us.skill.normalizedName))
       );
 
-      // Extract skills from experiences and summary just in case they aren't in userSkills
       const cvText = [
         profile.summary || '',
         ...(profile.experiences.map(e => e.bullets.join(' ') + ' ' + e.role + ' ' + e.company)),
@@ -84,20 +83,23 @@ export class MatchingService {
       for (const req of job.requirements) {
         const rawReq = req.rawRequirement;
         const normalizedReq = this.normalizeSkill(rawReq);
+        const lowerReq = normalizedReq.toLowerCase();
         
-        // 1. Check strict confirmed/inferred/generated skills
         if (trustedSkills.has(normalizedReq)) {
           matched.push(rawReq);
         } 
-        // 2. Explicitly rejected skills must be marked as missing, bypassing heuristics
         else if (rejectedSkills.has(normalizedReq)) {
           missing.push(rawReq);
         }
         else {
-          // 3. Fallback heuristic: check if the normalized word appears in CV text
-          const isMentioned = cvText.includes(normalizedReq.toLowerCase());
+          // Fallback heuristic: token-aware match to avoid C matching React
+          // Escape regex characters in lowerReq just in case
+          const escapedReq = lowerReq.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`\\b${escapedReq}\\b`, 'i');
+          const isMentioned = regex.test(cvText);
+          
           if (isMentioned) {
-            unknown.push(rawReq); // User might have it, but not explicitly confirmed as a "skill"
+            unknown.push(rawReq); 
           } else {
             missing.push(rawReq);
           }
@@ -111,26 +113,7 @@ export class MatchingService {
       };
     }, 60 * 60 * 24 * 7);
 
-    // Create or reuse an Application record
-    let application = await prisma.application.findFirst({
-      where: { profileId: profile.id, jobId: job.id }
-    });
-
-    if (!application) {
-      application = await prisma.application.create({
-        data: {
-          userId: profile.userId,
-          profileId: profile.id,
-          jobId: job.id,
-          status: 'Draft'
-        }
-      });
-    }
-
-    return { 
-      applicationId: application.id, 
-      analysis 
-    };
+    return { analysis };
   }
 }
 

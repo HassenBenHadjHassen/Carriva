@@ -30,8 +30,8 @@ export class ApplicationService {
             status: 'Analyzed'
           }
         });
-      } catch (error: any) {
-        if (error.code === 'P2002') {
+      } catch (error: unknown) {
+        if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2002') {
           application = await prisma.application.findUniqueOrThrow({
             where: {
               userId_profileId_jobId: { userId, profileId, jobId: job.id }

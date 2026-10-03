@@ -2,6 +2,7 @@ import { prisma } from '../lib/prisma';
 import { aiService } from '../ai/service';
 import { getActiveModelName } from '../ai/config';
 import { cacheService } from '../cache/redis';
+import { cacheKeys } from '../cache/keys';
 import { PROMPT_VERSION } from '../config/constants';
 
 export class CoverLetterService {
@@ -18,7 +19,7 @@ export class CoverLetterService {
     const jobHash = application.job.hash;
     
     // Deterministic cache key
-    const cacheKey = `cover-letter:${application.userId}:${application.profileId}:${profileVersion}:${jobHash}:${modelName}:${PROMPT_VERSION}:en`;
+    const cacheKey = cacheKeys.coverLetterGeneration(application.userId, application.profileId, profileVersion, jobHash, modelName);
 
     // Deduplication check in DB
     const existingGeneration = await prisma.generatedCoverLetter.findFirst({

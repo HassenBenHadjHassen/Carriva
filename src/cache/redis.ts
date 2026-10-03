@@ -1,7 +1,7 @@
 import { Redis } from '@upstash/redis';
 import { prisma } from '../lib/prisma';
 
-let redis: Redis | null = null;
+export let redis: Redis | null = null;
 try {
   if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
     redis = new Redis({
@@ -13,7 +13,7 @@ try {
   console.warn("Redis initialization failed, falling back to DB only", e);
 }
 
-const inflightPromises = new Map<string, Promise<any>>();
+const inflightPromises = new Map<string, Promise<unknown>>();
 
 export const cacheService = {
   async get<T>(key: string): Promise<T | null> {

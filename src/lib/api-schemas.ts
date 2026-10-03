@@ -7,7 +7,7 @@ export const AnalyzeJobSchema = z.object({
 
 export const ConfirmSkillsSchema = z.object({
   applicationId: z.string().min(1),
-  skillResponses: z.record(z.object({
+  skillResponses: z.record(z.string(), z.object({
     state: z.enum(['confirmed', 'rejected', 'unknown']),
     context: z.string().optional()
   }))

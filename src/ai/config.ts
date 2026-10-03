@@ -1,5 +1,16 @@
+export function getActiveProvider(): string {
+  const provider = (process.env.AI_PROVIDER || 'mock').toLowerCase().trim();
+  
+  if (['google', 'openai', 'anthropic', 'mock'].includes(provider)) {
+    return provider;
+  }
+  
+  throw new Error(`Unsupported AI_PROVIDER configuration: ${provider}`);
+}
+
 export function getActiveModelName(): string {
-  const provider = process.env.AI_PROVIDER || 'mock';
+  const provider = getActiveProvider();
+  
   switch (provider) {
     case 'google':
       return process.env.GOOGLE_AI_MODEL || 'gemini-2.5-flash';
@@ -11,3 +22,4 @@ export function getActiveModelName(): string {
       return process.env.AI_MODEL || 'mock-model';
   }
 }
+

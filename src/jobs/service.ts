@@ -1,6 +1,7 @@
 import { aiService } from '../ai/service';
 import { getActiveModelName } from '../ai/config';
 import { cacheService } from '../cache/redis';
+import { cacheKeys } from '../cache/keys';
 import { prisma } from '../lib/prisma';
 import { SCHEMA_VERSION, PROMPT_VERSION } from '../config/constants';
 import crypto from 'crypto';
@@ -25,7 +26,7 @@ export class JobsService {
     const normalized = this.normalizeJobDescription(descriptionText);
     const normalizedHash = crypto.createHash('sha256').update(normalized).digest('hex');
     const modelName = getActiveModelName();
-    const cacheKey = `job:${normalizedHash}:${SCHEMA_VERSION}:${PROMPT_VERSION}:${modelName}`;
+    const cacheKey = cacheKeys.job(normalizedHash, modelName);
 
     // Deduplication check: See if this exact job description has been analyzed already
     const existingJob = await prisma.job.findFirst({
@@ -53,7 +54,7 @@ export class JobsService {
           description: descriptionText,
           hash: normalizedHash,
           requirements: {
-            create: (jobData.requirements || []).map((req: any) => ({
+            create: (jobData.requirements || []).map((req: { skill: string, isMandatory: boolean }) => ({
               rawRequirement: req.skill,
               isMandatory: req.isMandatory
             }))
@@ -64,8 +65,8 @@ export class JobsService {
         }
       });
       return job;
-    } catch (error: any) {
-      if (error.code === 'P2002') {
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2002') {
         console.log(`[JobsService] Job was concurrently created. Reusing existing job.`);
         const concurrentJob = await prisma.job.findUnique({
           where: { hash: normalizedHash },

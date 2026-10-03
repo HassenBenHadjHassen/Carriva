@@ -10,8 +10,8 @@ interface DocumentGeneratorProps {
 export function DocumentGenerator({ applicationId, disabled }: DocumentGeneratorProps) {
   const [isGeneratingCV, setIsGeneratingCV] = useState(false);
   const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
-  const [cvResult, setCvResult] = useState<any>(null);
-  const [coverLetterResult, setCoverLetterResult] = useState<any>(null);
+  const [cvResult, setCvResult] = useState<{ id: string } | null>(null);
+  const [coverLetterResult, setCoverLetterResult] = useState<{ id: string } | null>(null);
   const [error, setError] = useState('');
 
   async function generateDocument(type: 'cv' | 'cover-letter') {

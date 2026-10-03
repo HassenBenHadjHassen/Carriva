@@ -3,6 +3,7 @@ import { resumeService } from '../../../resume/service';
 import { coverLetterService } from '../../../cover-letter/service';
 import { requireUser } from '../../../lib/auth';
 import { handleApiError } from '../../../lib/api-response';
+import { cacheKeys } from '../../../cache/keys';
 import puppeteer from 'puppeteer';
 
 export async function GET(req: NextRequest) {
@@ -25,13 +26,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Application not found or unauthorized' }, { status: 403 });
     }
 
-    const { TEMPLATE_VERSION } = await import('../../../config/constants');
     const generatedResume = await prisma.generatedResume.findFirst({ where: { applicationId: applicationIdRaw }, orderBy: { createdAt: 'desc' } });
     const coverLetter = await prisma.generatedCoverLetter.findFirst({ where: { applicationId: applicationIdRaw }, orderBy: { createdAt: 'desc' } });
 
     const cvId = generatedResume?.id || 'none';
     const clId = coverLetter?.id || 'none';
-    const cacheKey = `pdf:${type}:${cvId}:${clId}:${TEMPLATE_VERSION}`;
+    const cacheKey = cacheKeys.pdf(type, cvId, clId);
 
     const { cacheService } = await import('../../../cache/redis');
 
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
       const browser = await puppeteer.launch({ headless: true });
       try {
         const page = await browser.newPage();
-        await page.setContent(fullHtml, { waitUntil: 'networkidle0' });
+        await page.setContent(fullHtml, { waitUntil: 'domcontentloaded' });
         const pdfUint8Array = await page.pdf({ 
           format: 'A4', 
           printBackground: true, 

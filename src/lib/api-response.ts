@@ -17,7 +17,7 @@ export function handleApiError(error: unknown) {
   }
 
   if (error instanceof ZodError) {
-    return NextResponse.json({ error: 'Bad Request', details: error.errors }, { status: 400 });
+    return NextResponse.json({ error: 'Bad Request', details: error.issues }, { status: 400 });
   }
 
   return NextResponse.json(

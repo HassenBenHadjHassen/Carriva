@@ -26,7 +26,7 @@ describe('Carriva Hardening Pass Tests', () => {
   describe('Provider Architecture', () => {
     it('throws error for unsupported provider', () => {
       process.env.AI_PROVIDER = 'foo';
-      expect(() => new AIService()).toThrowError("Unsupported AI provider: foo");
+      expect(() => new AIService()).toThrowError("Unsupported AI_PROVIDER configuration: foo");
     });
 
     it('initializes mock provider correctly', () => {

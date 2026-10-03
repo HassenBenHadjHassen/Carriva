@@ -2,6 +2,7 @@ import { prisma } from '../lib/prisma';
 import { aiService } from '../ai/service';
 import { getActiveModelName } from '../ai/config';
 import { cacheService } from '../cache/redis';
+import { cacheKeys } from '../cache/keys';
 import { TEMPLATE_VERSION, PROMPT_VERSION } from '../config/constants';
 import * as cheerio from 'cheerio';
 import fs from 'fs/promises';
@@ -21,7 +22,7 @@ export class ResumeService {
     const jobHash = application.job.hash;
     
     // Deterministic cache key
-    const cacheKey = `resume:${application.userId}:${application.profileId}:${profileVersion}:${jobHash}:${TEMPLATE_VERSION}:${modelName}:${PROMPT_VERSION}:en`;
+    const cacheKey = cacheKeys.resumeGeneration(application.userId, application.profileId, profileVersion, jobHash, modelName);
 
     // Deduplication check in DB
     const existingGeneration = await prisma.generatedResume.findFirst({
@@ -61,7 +62,7 @@ export class ResumeService {
     if (!generated) throw new Error("No generated resume found for this application");
 
     // Check cache for HTML
-    const cacheKey = `html:${generated.id}:${TEMPLATE_VERSION}`;
+    const cacheKey = cacheKeys.htmlRender(generated.id);
     if (generated.htmlContent) {
       return generated.htmlContent;
     }
@@ -138,7 +139,7 @@ export class ResumeService {
         const orderedExperiences = profile.experiences.slice().sort((a, b) => new Date(b.startDate || 0).getTime() - new Date(a.startDate || 0).getTime());
         
         for (const exp of orderedExperiences) {
-          const tailoredExp = content.experience?.find((e: any) => e.experienceId === exp.id);
+          const tailoredExp = content.experience?.find((e: { experienceId: string, bullets: string[] }) => e.experienceId === exp.id);
           const bulletsToUse = tailoredExp ? tailoredExp.bullets : exp.bullets;
           
           const article = $('<article class="experience"></article>');
