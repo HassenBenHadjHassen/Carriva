@@ -2,7 +2,7 @@ import { generateObject, generateText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { AIProvider, StructuredGenerationRequest, TextGenerationRequest } from '../provider';
 import { prisma } from '../../lib/prisma';
-import { getActiveModelName } from '../service';
+import { getActiveModelName } from '../config';
 
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,

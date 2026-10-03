@@ -1,4 +1,5 @@
-import { aiService, getActiveModelName } from '../ai/service';
+import { aiService } from '../ai/service';
+import { getActiveModelName } from '../ai/config';
 import { cacheService } from '../cache/redis';
 import { prisma } from '../lib/prisma';
 import { SCHEMA_VERSION, PROMPT_VERSION } from '../config/constants';
@@ -43,24 +44,37 @@ export class JobsService {
       return await aiService.extractJob(userId, descriptionText);
     }, 60 * 60 * 24 * 30); // 30 days
 
-    // Save Job and its Requirements to Prisma
-    const job = await prisma.job.create({
-      data: {
-        title: jobData.title,
-        company: jobData.company,
-        description: descriptionText,
-        hash: normalizedHash,
-        requirements: {
-          create: (jobData.requirements || []).map((req: any) => ({
-            rawRequirement: req.skill,
-            isMandatory: req.isMandatory
-          }))
+    // Save Job and its Requirements to Prisma, handling concurrency gracefully
+    try {
+      const job = await prisma.job.create({
+        data: {
+          title: jobData.title,
+          company: jobData.company,
+          description: descriptionText,
+          hash: normalizedHash,
+          requirements: {
+            create: (jobData.requirements || []).map((req: any) => ({
+              rawRequirement: req.skill,
+              isMandatory: req.isMandatory
+            }))
+          }
+        },
+        include: {
+          requirements: true
         }
-      },
-      include: {
-        requirements: true
+      });
+      return job;
+    } catch (error: any) {
+      if (error.code === 'P2002') {
+        console.log(`[JobsService] Job was concurrently created. Reusing existing job.`);
+        const concurrentJob = await prisma.job.findUnique({
+          where: { hash: normalizedHash },
+          include: { requirements: true }
+        });
+        if (concurrentJob) return concurrentJob;
       }
-    });
+      throw error;
+    }
 
     return job;
   }

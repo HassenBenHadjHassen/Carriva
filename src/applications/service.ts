@@ -48,7 +48,7 @@ export class ApplicationService {
     return { application, matchAnalysis: matchAnalysis.analysis, job };
   }
 
-  async confirmSkills(userId: string, applicationId: string, confirmedSkills: string[]) {
+  async confirmSkills(userId: string, applicationId: string, skillResponses: Record<string, { state: 'confirmed' | 'rejected' | 'unknown', context?: string }>) {
     const application = await prisma.application.findUnique({
       where: { id: applicationId },
       include: { profile: true }
@@ -58,8 +58,8 @@ export class ApplicationService {
       throw new Error("Application not found or unauthorized");
     }
 
-    // Upsert confirmed skills to UserSkill
-    for (const skillName of confirmedSkills) {
+    // Upsert skills to UserSkill based on responses
+    for (const [skillName, response] of Object.entries(skillResponses)) {
       const normalizedSkill = matchingService.normalizeSkill(skillName);
       
       const skill = await prisma.skill.upsert({
@@ -76,13 +76,15 @@ export class ApplicationService {
           }
         },
         update: {
-          confidence: 'confirmed'
+          confidence: response.state,
+          context: response.context
         },
         create: {
           userId,
           skillId: skill.id,
-          confidence: 'confirmed',
-          source: 'user' // Marked as confirmed directly by user
+          confidence: response.state,
+          source: 'user', // Marked directly by user
+          context: response.context
         }
       });
     }

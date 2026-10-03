@@ -75,8 +75,9 @@ model UserSkill {
   skillId String @db.ObjectId
   skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
 
-  confidence String // "confirmed", "uncertain", "inferred"
+  confidence String // "confirmed", "rejected", "unknown", "inferred"
   source     String // "cv", "user", "generated"
+  context    String? // "Professional", "Freelance", "Project", "Education"
 
   createdAt DateTime @default(now())
 
@@ -126,7 +127,7 @@ model Job {
   title       String
   company     String
   description String
-  hash        String // Normalized job hash for caching
+  hash        String @unique // Normalized job hash for caching
 
   requirements JobRequirement[]
   applications Application[]

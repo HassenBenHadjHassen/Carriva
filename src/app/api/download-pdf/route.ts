@@ -21,43 +21,56 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Application not found or unauthorized' }, { status: 403 });
     }
 
-    const cvHtml = await resumeService.renderResumeHtml(applicationId, 'default');
-    const clHtml = await coverLetterService.renderCoverLetterHtml(applicationId);
+    const { TEMPLATE_VERSION } = await import('../../../config/constants');
+    const generatedResume = await prisma.generatedResume.findFirst({ where: { applicationId }, orderBy: { createdAt: 'desc' } });
+    const coverLetter = await prisma.generatedCoverLetter.findFirst({ where: { applicationId }, orderBy: { createdAt: 'desc' } });
 
-    const fullHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Carriva Application Documents</title>
-        <style>
-          /* Inject base styles for printing */
-          @media print {
-            .page-break { page-break-before: always; }
-          }
-        </style>
-      </head>
-      <body>
-        <div>${cvHtml}</div>
-        <div class="page-break"></div>
-        <div>${clHtml}</div>
-      </body>
-      </html>
-    `;
+    const cvId = generatedResume?.id || 'none';
+    const clId = coverLetter?.id || 'none';
+    const cacheKey = `pdf:${cvId}:${clId}:${TEMPLATE_VERSION}`;
 
-    // Render PDF with Puppeteer
-    const browser = await puppeteer.launch({ headless: true });
-    const page = await browser.newPage();
-    await page.setContent(fullHtml, { waitUntil: 'domcontentloaded' });
-    const pdfUint8Array = await page.pdf({ 
-      format: 'A4', 
-      printBackground: true, 
-      margin: { top: '0', right: '0', bottom: '0', left: '0' } 
-    });
-    await browser.close();
+    const { cacheService } = await import('../../../cache/redis');
 
-    // Convert Uint8Array to Buffer for NextResponse
-    const pdfBuffer = Buffer.from(pdfUint8Array);
+    const base64Pdf = await cacheService.getOrSet(cacheKey, async () => {
+      const cvHtml = await resumeService.renderResumeHtml(applicationId, 'default');
+      const clHtml = await coverLetterService.renderCoverLetterHtml(applicationId);
+
+      const fullHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Carriva Application Documents</title>
+          <style>
+            /* Inject base styles for printing */
+            @media print {
+              .page-break { page-break-before: always; }
+            }
+          </style>
+        </head>
+        <body>
+          <div>${cvHtml}</div>
+          <div class="page-break"></div>
+          <div>${clHtml}</div>
+        </body>
+        </html>
+      `;
+
+      // Render PDF with Puppeteer
+      const browser = await puppeteer.launch({ headless: true });
+      const page = await browser.newPage();
+      await page.setContent(fullHtml, { waitUntil: 'domcontentloaded' });
+      const pdfUint8Array = await page.pdf({ 
+        format: 'A4', 
+        printBackground: true, 
+        margin: { top: '0', right: '0', bottom: '0', left: '0' } 
+      });
+      await browser.close();
+
+      return Buffer.from(pdfUint8Array).toString('base64');
+    }, 60 * 60 * 24 * 7); // 7 days cache
+
+    const pdfBuffer = Buffer.from(base64Pdf, 'base64');
 
     return new NextResponse(pdfBuffer, {
       headers: {

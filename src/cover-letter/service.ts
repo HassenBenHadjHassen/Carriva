@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
-import { aiService, getActiveModelName } from '../ai/service';
+import { aiService } from '../ai/service';
+import { getActiveModelName } from '../ai/config';
 import { cacheService } from '../cache/redis';
 import { PROMPT_VERSION } from '../config/constants';
 

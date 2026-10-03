@@ -5,13 +5,13 @@ import { requireUser } from '../../../lib/auth';
 export async function POST(req: NextRequest) {
   try {
     const user = await requireUser();
-    const { applicationId, confirmedSkills } = await req.json();
+    const { applicationId, skillResponses } = await req.json();
 
-    if (!applicationId || !Array.isArray(confirmedSkills)) {
-      return NextResponse.json({ error: 'Missing applicationId or confirmedSkills' }, { status: 400 });
+    if (!applicationId || !skillResponses) {
+      return NextResponse.json({ error: 'Missing applicationId or skillResponses' }, { status: 400 });
     }
 
-    await applicationService.confirmSkills(user.id, applicationId, confirmedSkills);
+    await applicationService.confirmSkills(user.id, applicationId, skillResponses);
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {

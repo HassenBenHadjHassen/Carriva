@@ -2,7 +2,7 @@ import { generateObject, generateText } from 'ai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { AIProvider, StructuredGenerationRequest, TextGenerationRequest } from '../provider';
 import { prisma } from '../../lib/prisma';
-import { getActiveModelName } from '../service';
+import { getActiveModelName } from '../config';
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_AI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY,

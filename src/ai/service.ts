@@ -11,14 +11,7 @@ import {
   CoverLetterSchema, CoverLetterType
 } from './schemas';
 
-export function getActiveModelName(): string {
-  const provider = process.env.AI_PROVIDER?.toLowerCase();
-  if (process.env.AI_MODEL) return process.env.AI_MODEL;
-  if (provider === 'google') return process.env.GOOGLE_AI_MODEL || 'gemini-1.5-flash';
-  if (provider === 'openai') return process.env.OPENAI_AI_MODEL || 'gpt-4o';
-  if (provider === 'anthropic') return process.env.ANTHROPIC_AI_MODEL || 'claude-3-5-sonnet-20241022';
-  return 'mock-model';
-}
+
 
 export class AIService {
   private provider: AIProvider;

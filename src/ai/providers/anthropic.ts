@@ -2,7 +2,7 @@ import { generateObject, generateText } from 'ai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { AIProvider, StructuredGenerationRequest, TextGenerationRequest } from '../provider';
 import { prisma } from '../../lib/prisma';
-import { getActiveModelName } from '../service';
+import { getActiveModelName } from '../config';
 
 const anthropic = createAnthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,

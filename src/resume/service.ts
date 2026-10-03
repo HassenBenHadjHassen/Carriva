@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
-import { aiService, getActiveModelName } from '../ai/service';
+import { aiService } from '../ai/service';
+import { getActiveModelName } from '../ai/config';
 import { cacheService } from '../cache/redis';
 import { TEMPLATE_VERSION, PROMPT_VERSION } from '../config/constants';
 import * as cheerio from 'cheerio';
@@ -76,88 +77,118 @@ export class ResumeService {
       
       const $ = cheerio.load(rawHtml);
 
-      const sectionEn = $('#cv-en');
+      const populateSection = (sectionId: string, isFr: boolean) => {
+        const section = $(sectionId);
+        if (!section.length) return;
 
-      // Header / Personal Info
-      if (profile.user.name) {
-        sectionEn.find('header.hero h1').text(profile.user.name);
-      }
-      if (profile.user.email) {
-        sectionEn.find('.contact-list li:first-child a').text(profile.user.email).attr('href', `mailto:${profile.user.email}`);
-      }
-
-      // Inject Summary
-      if (content.summary) {
-        sectionEn.find('.profile-text').text(content.summary);
-      }
-
-      // Inject Skills
-      if (content.selectedSkills && content.selectedSkills.length > 0) {
-        const badgesHtml = content.selectedSkills.map((s: string) => `<span class="skill-badge">${s}</span>`).join('');
-        sectionEn.find('.skill-group--primary .skill-badges').html(badgesHtml);
-      }
-
-      // Experiences
-      const experienceContainer = sectionEn.find('.section:nth-of-type(2)');
-      experienceContainer.find('article.experience').remove(); // Clear template experiences
-      
-      const orderedExperiences = profile.experiences.slice().sort((a, b) => new Date(b.startDate || 0).getTime() - new Date(a.startDate || 0).getTime());
-      
-      for (const exp of orderedExperiences) {
-        // Find tailored bullets if they exist
-        const tailoredExp = content.experience?.find((e: any) => e.experienceId === exp.id);
-        const bulletsToUse = tailoredExp ? tailoredExp.bullets : exp.bullets;
+        // Header / Personal Info
+        if (profile.user.name) {
+          section.find('header.hero h1').text(profile.user.name);
+        }
         
-        const bulletsHtml = bulletsToUse.map((b: string) => `<li>${b}</li>`).join('');
-        const expHtml = `
-        <article class="experience">
-          <div class="exp-header">
-            <div class="exp-title-row">
-              <h3 class="exp-role">${exp.role}</h3>
-              <span class="exp-period">${exp.startDate} - ${exp.endDate || 'Present'}</span>
-            </div>
-            <span class="exp-company">${exp.company}</span>
-          </div>
-          <ul class="exp-bullets">
-            ${bulletsHtml}
-          </ul>
-        </article>`;
-        experienceContainer.append(expHtml);
-      }
+        const contactList = section.find('.contact-list');
+        if (profile.user.email) {
+          contactList.find('li').eq(0).find('a').text(profile.user.email).attr('href', `mailto:${profile.user.email}`);
+        }
+        if (profile.user.phone) {
+          contactList.find('li').eq(1).find('a').text(profile.user.phone).attr('href', `tel:${profile.user.phone.replace(/\\s/g, '')}`);
+        }
+        if (profile.user.website) {
+          contactList.find('li').eq(2).find('a').text(profile.user.website).attr('href', profile.user.website);
+        }
+        if (profile.user.github) {
+          contactList.find('li').eq(3).find('a').text(profile.user.github).attr('href', profile.user.github);
+        }
+        if (profile.user.linkedin) {
+          contactList.find('li').eq(4).find('a').text(profile.user.linkedin).attr('href', profile.user.linkedin);
+        }
+        if (profile.user.location) {
+          contactList.find('li.contact-availability').text(profile.user.location);
+        }
 
-      // Educations
-      const eduContainer = sectionEn.find('aside.sidebar .side-block:last-child');
-      eduContainer.find('.edu-item').remove();
-      for (const edu of profile.educations) {
-        const eduHtml = `
-        <div class="edu-item">
-          <strong>${edu.degree} in ${edu.field}</strong>
-          <span>${edu.institution} · ${edu.startDate} - ${edu.endDate || 'Present'}</span>
-        </div>`;
-        eduContainer.append(eduHtml);
-      }
+        // Inject Summary
+        if (content.summary) {
+          section.find('.profile-text').text(content.summary);
+        }
 
-      // Projects
-      const projectContainer = sectionEn.find('.project-list');
-      projectContainer.empty();
-      
-      const selectedProjects = profile.projects.filter(p => content.selectedProjects?.includes(p.id))
-      const projectsToRender = selectedProjects.length > 0 ? selectedProjects : profile.projects;
-      
-      for (const proj of projectsToRender) {
-        const stackStr = proj.technologies.join(' · ');
-        const projHtml = `
-        <article class="project-item">
-          <div class="project-left">
-            <h3 class="project-name">${proj.name}</h3>
-          </div>
-          <div class="project-right">
-            <p class="project-desc">${proj.description || ''}</p>
-            <div class="project-stack">${stackStr}</div>
-          </div>
-        </article>`;
-        projectContainer.append(projHtml);
-      }
+        // Inject Skills
+        if (content.selectedSkills && content.selectedSkills.length > 0) {
+          const badgesContainer = section.find('.skill-group--primary .skill-badges');
+          badgesContainer.empty();
+          content.selectedSkills.forEach((s: string) => {
+            badgesContainer.append($('<span class="skill-badge"></span>').text(s));
+          });
+        }
+
+        // Experiences
+        const experienceContainer = section.find('.section:nth-of-type(2)');
+        experienceContainer.find('article.experience').remove(); // Clear template experiences
+        
+        const orderedExperiences = profile.experiences.slice().sort((a, b) => new Date(b.startDate || 0).getTime() - new Date(a.startDate || 0).getTime());
+        
+        for (const exp of orderedExperiences) {
+          const tailoredExp = content.experience?.find((e: any) => e.experienceId === exp.id);
+          const bulletsToUse = tailoredExp ? tailoredExp.bullets : exp.bullets;
+          
+          const article = $('<article class="experience"></article>');
+          const header = $('<div class="exp-header"></div>');
+          const titleRow = $('<div class="exp-title-row"></div>');
+          
+          titleRow.append($('<h3 class="exp-role"></h3>').text(exp.role));
+          titleRow.append($('<span class="exp-period"></span>').text(`${exp.startDate} - ${exp.endDate || (isFr ? 'Présent' : 'Present')}`));
+          
+          header.append(titleRow);
+          header.append($('<span class="exp-company"></span>').text(exp.company));
+          
+          article.append(header);
+          
+          const ul = $('<ul class="exp-bullets"></ul>');
+          bulletsToUse.forEach((b: string) => {
+            ul.append($('<li></li>').text(b));
+          });
+          article.append(ul);
+          
+          experienceContainer.append(article);
+        }
+
+        // Educations
+        const eduContainer = section.find('aside.sidebar .side-block:last-child');
+        eduContainer.find('.edu-item').remove();
+        for (const edu of profile.educations) {
+          const eduDiv = $('<div class="edu-item"></div>');
+          const title = isFr ? `${edu.degree} en ${edu.field}` : `${edu.degree} in ${edu.field}`;
+          eduDiv.append($('<strong></strong>').text(title));
+          eduDiv.append($('<span></span>').text(`${edu.institution} · ${edu.startDate} - ${edu.endDate || (isFr ? 'Présent' : 'Present')}`));
+          eduContainer.append(eduDiv);
+        }
+
+        // Projects
+        const projectContainer = section.find('.project-list');
+        projectContainer.empty();
+        
+        const selectedProjects = profile.projects.filter(p => content.selectedProjects?.includes(p.id))
+        const projectsToRender = selectedProjects.length > 0 ? selectedProjects : profile.projects;
+        
+        for (const proj of projectsToRender) {
+          const stackStr = proj.technologies.join(' · ');
+          const article = $('<article class="project-item"></article>');
+          
+          const left = $('<div class="project-left"></div>');
+          left.append($('<h3 class="project-name"></h3>').text(proj.name));
+          
+          const right = $('<div class="project-right"></div>');
+          right.append($('<p class="project-desc"></p>').text(proj.description || ''));
+          right.append($('<div class="project-stack"></div>').text(stackStr));
+          
+          article.append(left);
+          article.append(right);
+          
+          projectContainer.append(article);
+        }
+      };
+
+      populateSection('#cv-en', false);
+      populateSection('#cv-fr', true);
 
       const cssPath = path.join(process.cwd(), 'template', 'styles.css');
       const cssContent = await fs.readFile(cssPath, 'utf-8');

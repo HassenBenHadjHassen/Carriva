@@ -1,4 +1,5 @@
-import { aiService, getActiveModelName } from '../ai/service';
+import { aiService } from '../ai/service';
+import { getActiveModelName } from '../ai/config';
 import { ResumeProfileType } from '../ai/schemas';
 import { cacheService } from '../cache/redis';
 import { prisma } from '../lib/prisma';
