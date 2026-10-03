@@ -50,17 +50,17 @@ export function StatusSelector({ applicationId, initialStatus }: Props) {
     <div className="flex flex-col items-start gap-1">
       <div className="relative inline-flex items-center">
         {saving ? (
-          <div className={\`absolute left-3 flex h-full items-center\`}>
+          <div className="absolute left-3 flex h-full items-center">
             <Loader2 className="h-3.5 w-3.5 animate-spin" />
           </div>
         ) : (
-          <div className={\`absolute left-3 h-2 w-2 rounded-full bg-current opacity-70 pointer-events-none\`} />
+          <div className="absolute left-3 h-2 w-2 rounded-full bg-current opacity-70 pointer-events-none" />
         )}
         <select
           value={status}
           onChange={changeStatus}
           disabled={saving}
-          className={\`appearance-none pl-7 pr-8 py-1.5 text-sm font-semibold rounded-md border-0 focus:ring-2 focus:ring-ring outline-none transition-colors cursor-pointer \${current.color}\`}
+          className={`appearance-none pl-7 pr-8 py-1.5 text-sm font-semibold rounded-md border-0 focus:ring-2 focus:ring-ring outline-none transition-colors cursor-pointer ${current.color}`}
         >
           {STATUSES.map(s => (
             <option key={s.value} value={s.value} className="bg-background text-foreground">
