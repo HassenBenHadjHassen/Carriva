@@ -1,43 +1,47 @@
 import { AIProvider } from './provider';
 import { MockAIProvider } from './providers/mock';
-// import { AnthropicProvider } from './providers/anthropic';
-// import { OpenAIProvider } from './providers/openai';
+import { GoogleAIProvider } from './providers/google';
+import { ResumeProfileSchema, ResumeProfileType, JobExtractionSchema, JobExtractionType, JobAnalysisSchema, JobAnalysisType } from './schemas';
 
 export class AIService {
   private provider: AIProvider;
 
   constructor() {
     const providerName = process.env.AI_PROVIDER || 'mock';
-
-    switch (providerName.toLowerCase()) {
-      case 'mock':
-        this.provider = new MockAIProvider();
-        break;
-      // case 'anthropic':
-      //   this.provider = new AnthropicProvider();
-      //   break;
-      // case 'openai':
-      //   this.provider = new OpenAIProvider();
-      //   break;
-      default:
-        console.warn(`Unknown AI provider "${providerName}", falling back to mock.`);
-        this.provider = new MockAIProvider();
+    if (providerName.toLowerCase() === 'google') {
+      this.provider = new GoogleAIProvider();
+    } else if (providerName.toLowerCase() === 'mock') {
+      this.provider = new MockAIProvider();
+    } else {
+      console.warn(`Provider ${providerName} not yet implemented, falling back to mock.`);
+      this.provider = new MockAIProvider();
     }
   }
 
-  // Example tasks
-  async extractResume(cvText: string) {
-    return this.provider.generateStructured({
-      prompt: `Extract CV data: ${cvText}`,
-      schema: {}, // would pass Zod schema here
+  async generateText(prompt: string, systemPrompt?: string): Promise<string> {
+    return this.provider.generateText({ prompt, systemPrompt });
+  }
+
+  async extractResume(cvText: string): Promise<ResumeProfileType> {
+    return this.provider.generateStructured<ResumeProfileType>({
+      prompt: `Extract the following CV into a structured JSON profile matching the schema. DO NOT invent details. If something is missing, leave it empty or omit it.\n\nCV Text:\n${cvText}`,
+      schema: ResumeProfileSchema,
       schemaName: 'ResumeProfile'
     });
   }
 
-  async analyzeJob(jobDescription: string, userProfile: any) {
-    return this.provider.generateStructured({
-      prompt: `Analyze job description against profile: ${jobDescription}`,
-      schema: {},
+  async extractJob(jobText: string): Promise<JobExtractionType> {
+    return this.provider.generateStructured<JobExtractionType>({
+      prompt: `Extract the following job description into structured data. Identify key skills required and whether they are mandatory.\n\nJob Text:\n${jobText}`,
+      schema: JobExtractionSchema,
+      schemaName: 'JobExtraction'
+    });
+  }
+
+  async analyzeMatch(profileData: unknown, jobData: unknown): Promise<JobAnalysisType> {
+    return this.provider.generateStructured<JobAnalysisType>({
+      prompt: `Compare the candidate's profile to the job requirements. Categorize the job's required skills into 'matched' (candidate clearly has it), 'missing' (candidate clearly does not have it based on constraints), and 'unknown' (not mentioned in profile, but possible).\n\nProfile:\n${JSON.stringify(profileData)}\n\nJob:\n${JSON.stringify(jobData)}`,
+      schema: JobAnalysisSchema,
       schemaName: 'JobAnalysis'
     });
   }

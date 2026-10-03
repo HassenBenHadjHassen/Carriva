@@ -11,7 +11,7 @@ export const cacheService = {
     return data || null;
   },
   
-  async set(key: string, value: any, ttlSeconds?: number): Promise<void> {
+  async set(key: string, value: unknown, ttlSeconds?: number): Promise<void> {
     if (ttlSeconds) {
       await redis.set(key, value, { ex: ttlSeconds });
     } else {

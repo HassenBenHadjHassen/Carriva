@@ -1,7 +1,8 @@
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface StructuredGenerationRequest<T> {
   prompt: string;
   systemPrompt?: string;
-  schema: unknown; // Ideally Zod type, we can use unknown here and cast in provider
+  schema: unknown;
   schemaName: string;
 }
 
