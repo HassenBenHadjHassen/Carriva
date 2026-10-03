@@ -53,6 +53,8 @@ export class JobsService {
           company: jobData.company,
           description: descriptionText,
           hash: normalizedHash,
+          minimumEducation: jobData.minimumEducation,
+          minimumYearsOfExperience: jobData.minimumYearsOfExperience,
           requirements: {
             create: (jobData.requirements || []).map((req: { skill: string, isMandatory: boolean }) => ({
               rawRequirement: req.skill,

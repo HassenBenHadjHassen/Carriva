@@ -53,6 +53,7 @@ model CareerProfile {
   version Int @default(1)
 
   summary String?
+  totalYearsOfExperience Int?
 
   experiences Experience[]
   educations  Education[]
@@ -134,6 +135,9 @@ model Job {
   company     String
   description String
   hash        String @unique // Normalized job hash for caching
+
+  minimumEducation         String?
+  minimumYearsOfExperience Int?
 
   requirements JobRequirement[]
   applications Application[]

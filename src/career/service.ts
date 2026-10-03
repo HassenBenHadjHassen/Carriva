@@ -37,6 +37,7 @@ export class CareerService {
         userId,
         sourceResumeId: document.id,
         summary: profileData.summary,
+        totalYearsOfExperience: profileData.totalYearsOfExperience,
         experiences: {
           create: profileData.experience.map((exp) => ({
             company: exp.company,

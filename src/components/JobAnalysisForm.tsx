@@ -16,7 +16,7 @@ interface JobAnalysisFormProps {
 export function JobAnalysisForm({ profileId, onAnalysisComplete }: JobAnalysisFormProps) {
   const [jobDescription, setJobDescription] = useState("")
   const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [result, setResult] = useState<{ job: { title: string; company: string; }; analysis: { matched: string[]; missing: string[]; unknown: string[]; } } | null>(null)
+  const [result, setResult] = useState<{ job: { title: string; company: string; }; analysis: JobAnalysisType } | null>(null)
   const [error, setError] = useState("")
 
   async function handleAnalyze() {
@@ -122,6 +122,17 @@ export function JobAnalysisForm({ profileId, onAnalysisComplete }: JobAnalysisFo
                     <Badge key={skill} variant="outline" className="bg-green-50 text-green-700 border-green-200">{skill}</Badge>
                   ))}
                 </div>
+                
+                {(result.analysis.meetsEducation !== undefined || result.analysis.meetsExperience !== undefined) && (
+                  <div className="mt-4 pt-4 border-t border-green-100 flex flex-col gap-2">
+                    {result.analysis.meetsEducation === true && (
+                      <span className="text-xs font-medium text-green-700 flex items-center gap-1">✓ Meets Education</span>
+                    )}
+                    {result.analysis.meetsExperience === true && (
+                      <span className="text-xs font-medium text-green-700 flex items-center gap-1">✓ Meets Experience</span>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2 rounded-lg border bg-card p-4">
@@ -148,6 +159,17 @@ export function JobAnalysisForm({ profileId, onAnalysisComplete }: JobAnalysisFo
                     <Badge key={skill} variant="outline" className="bg-red-50 text-red-700 border-red-200">{skill}</Badge>
                   ))}
                 </div>
+
+                {(result.analysis.meetsEducation === false || result.analysis.meetsExperience === false) && (
+                  <div className="mt-4 pt-4 border-t border-red-100 flex flex-col gap-2">
+                    {result.analysis.meetsEducation === false && (
+                      <span className="text-xs font-medium text-red-700 flex items-center gap-1">✕ Missing Education</span>
+                    )}
+                    {result.analysis.meetsExperience === false && (
+                      <span className="text-xs font-medium text-red-700 flex items-center gap-1">✕ Missing Experience</span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

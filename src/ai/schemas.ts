@@ -25,6 +25,7 @@ export const ProjectSchema = z.object({
 
 export const ResumeProfileSchema = z.object({
   summary: z.string().optional(),
+  totalYearsOfExperience: z.number().optional().describe("Total years of professional experience across all roles"),
   skills: z.array(z.string()),
   experience: z.array(ExperienceSchema),
   education: z.array(EducationSchema),
@@ -37,9 +38,11 @@ export const JobExtractionSchema = z.object({
   title: z.string(),
   company: z.string(),
   requirements: z.array(z.object({
-    skill: z.string(),
+    skill: z.string().describe("A concise, normalized technical or soft skill (e.g., 'React', 'Project Management', 'HTML'). DO NOT extract full sentences, experience years, or education degrees as skills."),
     isMandatory: z.boolean()
   })),
+  minimumEducation: z.string().optional().describe("e.g. 'Bachelor's degree in Computer Science'"),
+  minimumYearsOfExperience: z.number().optional().describe("Minimum years of professional experience required"),
 });
 
 export type JobExtractionType = z.infer<typeof JobExtractionSchema>;
@@ -48,6 +51,8 @@ export const JobAnalysisSchema = z.object({
   matched: z.array(z.string()).describe("Skills present in both profile and job"),
   missing: z.array(z.string()).describe("Skills definitely missing from profile"),
   unknown: z.array(z.string()).describe("Skills where it is unclear if the user has them"),
+  meetsEducation: z.boolean().optional().describe("True if the user meets the education requirements"),
+  meetsExperience: z.boolean().optional().describe("True if the user meets the experience requirements"),
 });
 
 export type JobAnalysisType = z.infer<typeof JobAnalysisSchema>;
