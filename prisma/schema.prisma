@@ -1,0 +1,219 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  resumes      ResumeDocument[]
+  profiles     CareerProfile[]
+  jobs         Job[]
+  applications Application[]
+  userSkills   UserSkill[]
+  aiUsages     AIUsage[]
+}
+
+model ResumeDocument {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  filename     String
+  originalText String
+  hash         String // For caching
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profiles CareerProfile[]
+}
+
+model CareerProfile {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  sourceResumeId String?         @db.ObjectId
+  sourceResume   ResumeDocument? @relation(fields: [sourceResumeId], references: [id], onDelete: SetNull)
+
+  version Int @default(1)
+
+  summary String?
+
+  experiences Experience[]
+  educations  Education[]
+  projects    Project[]
+
+  applications Application[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Skill {
+  id             String  @id @default(auto()) @map("_id") @db.ObjectId
+  normalizedName String  @unique // e.g. "React", "Node.js"
+  category       String?
+
+  userSkills      UserSkill[]
+  jobRequirements JobRequirement[]
+}
+
+model UserSkill {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  skillId String @db.ObjectId
+  skill   Skill  @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  confidence String // "confirmed", "uncertain", "inferred"
+  source     String // "cv", "user", "generated"
+
+  createdAt DateTime @default(now())
+
+  @@unique([userId, skillId])
+}
+
+model Experience {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  profileId String        @db.ObjectId
+  profile   CareerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  company   String
+  role      String
+  startDate String?
+  endDate   String?
+
+  bullets String[] // JSON or array of strings
+
+  source String // "cv", "user"
+}
+
+model Education {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  profileId String        @db.ObjectId
+  profile   CareerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  institution String
+  degree      String
+  field       String?
+  startDate   String?
+  endDate     String?
+}
+
+model Project {
+  id        String        @id @default(auto()) @map("_id") @db.ObjectId
+  profileId String        @db.ObjectId
+  profile   CareerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  name         String
+  description  String?
+  technologies String[]
+  url          String?
+}
+
+model Job {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  company     String
+  description String
+  hash        String // Normalized job hash for caching
+
+  requirements JobRequirement[]
+  applications Application[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model JobRequirement {
+  id    String @id @default(auto()) @map("_id") @db.ObjectId
+  jobId String @db.ObjectId
+  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  skillId String? @db.ObjectId
+  skill   Skill?  @relation(fields: [skillId], references: [id], onDelete: SetNull)
+
+  rawRequirement String
+  isMandatory    Boolean @default(false)
+}
+
+model Application {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @db.ObjectId
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  jobId String @db.ObjectId
+  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  profileId String        @db.ObjectId
+  profile   CareerProfile @relation(fields: [profileId], references: [id], onDelete: Restrict)
+
+  status String // Draft, Applied, Interview, Rejected, Offer, Archived
+
+  generatedResumes      GeneratedResume[]
+  generatedCoverLetters GeneratedCoverLetter[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model GeneratedResume {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  applicationId String      @db.ObjectId
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  templateVersion String
+  modelVersion    String
+
+  content     String // Structured JSON data ready for rendering
+  htmlContent String? // Rendered HTML cache
+
+  createdAt DateTime @default(now())
+}
+
+model GeneratedCoverLetter {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  applicationId String      @db.ObjectId
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  modelVersion String
+  content      String
+
+  createdAt DateTime @default(now())
+}
+
+model AIUsage {
+  id     String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId String? @db.ObjectId
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  provider         String
+  model            String
+  action           String
+  tokensPrompt     Int    @default(0)
+  tokensCompletion Int    @default(0)
+
+  createdAt DateTime @default(now())
+}
+
+model CacheMetadata {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  key       String    @unique
+  value     String
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+}
