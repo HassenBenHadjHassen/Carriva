@@ -59,7 +59,9 @@ export class MatchingService {
       const userSkills = profile.user?.userSkills || [];
       // Combine confirmed, inferred, and generated skills, prioritizing confirmed
       const normalizedUserSkills = new Set(
-        userSkills.map(us => this.normalizeSkill(us.skill.normalizedName))
+        userSkills
+          .filter(us => us.confidence !== 'rejected')
+          .map(us => this.normalizeSkill(us.skill.normalizedName))
       );
 
       // Extract skills from experiences and summary just in case they aren't in userSkills

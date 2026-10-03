@@ -91,7 +91,7 @@ export class ResumeService {
           contactList.find('li').eq(0).find('a').text(profile.user.email).attr('href', `mailto:${profile.user.email}`);
         }
         if (profile.user.phone) {
-          contactList.find('li').eq(1).find('a').text(profile.user.phone).attr('href', `tel:${profile.user.phone.replace(/\\s/g, '')}`);
+          contactList.find('li').eq(1).find('a').text(profile.user.phone).attr('href', `tel:${profile.user.phone.replace(/\s/g, '')}`);
         }
         if (profile.user.website) {
           contactList.find('li').eq(2).find('a').text(profile.user.website).attr('href', profile.user.website);

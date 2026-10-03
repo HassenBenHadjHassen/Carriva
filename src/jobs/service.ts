@@ -75,8 +75,6 @@ export class JobsService {
       }
       throw error;
     }
-
-    return job;
   }
 
   async getJob(jobId: string) {
