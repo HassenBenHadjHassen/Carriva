@@ -25,7 +25,7 @@ export class ResumeService {
 
     // Deduplication check in DB
     const existingGeneration = await prisma.generatedResume.findFirst({
-      where: { applicationId, templateVersion: TEMPLATE_VERSION, modelVersion: modelName }
+      where: { applicationId, templateVersion: TEMPLATE_VERSION, modelVersion: modelName, profileVersion, promptVersion: PROMPT_VERSION }
     });
 
     if (existingGeneration) {
@@ -42,6 +42,8 @@ export class ResumeService {
         applicationId,
         templateVersion: TEMPLATE_VERSION,
         modelVersion: modelName,
+        profileVersion,
+        promptVersion: PROMPT_VERSION,
         content: JSON.stringify(tailoredData),
         htmlContent: null
       }
@@ -81,12 +83,21 @@ export class ResumeService {
         const section = $(sectionId);
         if (!section.length) return;
 
+        // Clear existing personal fields
+        section.find('header.hero h1').empty();
+        const contactList = section.find('.contact-list');
+        contactList.find('li').eq(0).find('a').empty().removeAttr('href');
+        contactList.find('li').eq(1).find('a').empty().removeAttr('href');
+        contactList.find('li').eq(2).find('a').empty().removeAttr('href');
+        contactList.find('li').eq(3).find('a').empty().removeAttr('href');
+        contactList.find('li').eq(4).find('a').empty().removeAttr('href');
+        contactList.find('li.contact-availability').empty();
+
         // Header / Personal Info
         if (profile.user.name) {
           section.find('header.hero h1').text(profile.user.name);
         }
         
-        const contactList = section.find('.contact-list');
         if (profile.user.email) {
           contactList.find('li').eq(0).find('a').text(profile.user.email).attr('href', `mailto:${profile.user.email}`);
         }

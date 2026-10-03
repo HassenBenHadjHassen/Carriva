@@ -14,25 +14,38 @@ export class ApplicationService {
     const job = await jobsService.analyzeJobDescription(userId, jobDescription);
 
     // 2. Check if application exists
-    let application = await prisma.application.findFirst({
-      where: { userId, profileId, jobId: job.id }
+    let application = await prisma.application.findUnique({
+      where: {
+        userId_profileId_jobId: { userId, profileId, jobId: job.id }
+      }
     });
 
     if (!application) {
-      application = await prisma.application.create({
-        data: {
-          userId,
-          profileId,
-          jobId: job.id,
-          status: 'Analyzed'
+      try {
+        application = await prisma.application.create({
+          data: {
+            userId,
+            profileId,
+            jobId: job.id,
+            status: 'Analyzed'
+          }
+        });
+      } catch (error: any) {
+        if (error.code === 'P2002') {
+          application = await prisma.application.findUniqueOrThrow({
+            where: {
+              userId_profileId_jobId: { userId, profileId, jobId: job.id }
+            }
+          });
+        } else {
+          throw error;
         }
-      });
+      }
     }
 
     // 3. Run deterministic match analysis
     const matchAnalysis = await matchingService.compareProfileToJob(profileId, job.id);
 
-    // If there are unknown skills, we wait for confirmation. Otherwise, we can generate right away.
     if (matchAnalysis.analysis.unknown.length > 0) {
       await prisma.application.update({
         where: { id: application.id },
@@ -83,16 +96,16 @@ export class ApplicationService {
           userId,
           skillId: skill.id,
           confidence: response.state,
-          source: 'user', // Marked directly by user
+          source: 'user',
           context: response.context
         }
       });
     }
 
-    // Important: Increment profile version to invalidate caches (Step 9)
+    // Important: Atomic profile version increment
     await prisma.careerProfile.update({
       where: { id: application.profileId },
-      data: { version: application.profile.version + 1 }
+      data: { version: { increment: 1 } }
     });
 
     // Update application status
@@ -104,15 +117,25 @@ export class ApplicationService {
     return true;
   }
 
-  async generateArtifacts(userId: string, applicationId: string) {
+  async generateArtifacts(userId: string, applicationId: string, options: { resume?: boolean, coverLetter?: boolean } = { resume: true, coverLetter: true }) {
     const application = await prisma.application.findUnique({ where: { id: applicationId } });
     if (!application || application.userId !== userId) {
        throw new Error("Application not found or unauthorized");
     }
+    
+    if (application.status !== 'Ready' && application.status !== 'Generated') {
+       throw new Error("Application is not in a valid state to generate documents");
+    }
 
-    // Generate Tailored Resume and Cover Letter
-    await resumeService.generateTailoredResumeData(applicationId);
-    await coverLetterService.generateTailoredCoverLetter(applicationId);
+    let resumeData = null;
+    let coverLetterData = null;
+
+    if (options.resume) {
+      resumeData = await resumeService.generateTailoredResumeData(applicationId);
+    }
+    if (options.coverLetter) {
+      coverLetterData = await coverLetterService.generateTailoredCoverLetter(applicationId);
+    }
 
     // Transition state
     await prisma.application.update({
@@ -120,7 +143,7 @@ export class ApplicationService {
       data: { status: 'Generated' }
     });
 
-    return { status: 'Generated' };
+    return { status: 'Generated', resumeData, coverLetterData };
   }
 }
 

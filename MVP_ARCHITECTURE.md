@@ -110,15 +110,23 @@ Unit/Integration Tests (when written): `npm run test`
 E2E (PDF generation): `npm run test:e2e`
 *Make sure to set `AI_PROVIDER=mock` when running CI tests for deterministic results.*
 
-## 10. Known Limitations (MVP phase)
+## 10. Security & Orchestration
 
-- **Authentication**: Stubbed for MVP. Real implementations should use Auth.js or Better Auth.
-- **Visual PDF Render**: Implemented using a headless `puppeteer` instance in `download-pdf` route. Ensure the deployment environment supports Chromium execution.
-- **Rate Limits**: The mock provider is instant, but real providers will need queue management (BullMQ/Redis) to handle rate limits in production smoothly.
+- **Authentication & Authorization**: API endpoints are secured behind `requireUser()` which validates bearer tokens or session cookies. Domain services enforce entity ownership recursively.
+- **Rate Limiting**: Rate limits (e.g. 10 CV uploads per hour) are enforced via `@upstash/redis` to prevent abuse.
+- **Workflow Orchestration**: Generation workflows are managed uniformly via `ApplicationService` handling safe document transition states instead of separate decoupled APIs.
+- **Validation**: All API boundary payloads are strictly typed and parsed with `zod`.
 
-## 11. Hardening Pass Updates
+## 11. Known Limitations (MVP phase)
 
-- **AI Orchestration**: Fully provider-independent with OpenAI and Anthropic implementations. Strict fallbacks throw errors instead of hallucinating.
-- **Deterministic Skill Matching**: Uses normalized aliases without LLM intervention to avoid hallucination.
-- **Template Rendering**: Uses `cheerio` to inject structured data safely into the exact provided HTML template.
-- **Deduplication**: Job descriptions and artifacts are cached deterministically with versioning.
+- **Authentication UI**: No visual login UI is implemented yet, though backend authorization is enforced.
+- **Visual PDF Render**: Implemented using a headless `puppeteer` instance in `download-pdf` route.
+
+## 12. Hardening Pass Updates
+
+- **AI Orchestration**: Fully provider-independent with OpenAI, Google, and Anthropic implementations. Strict fallbacks throw errors instead of hallucinating.
+- **Deterministic Skill Matching**: Uses normalized aliases without LLM intervention to avoid hallucination. Unknown skills halt generation until explicitly confirmed.
+- **Template Rendering**: Uses `cheerio` to inject structured data safely, preventing XSS and clearing mock personal data before injection.
+- **Deduplication**: Job descriptions and generated artifacts are cached deterministically using cache-invalidation-safe version numbers (e.g., `promptVersion`, `profileVersion`).
+- **Data Integrity**: MongoDB Unique Index constraints handle concurrent duplication via `P2002` Prisma codes.
+

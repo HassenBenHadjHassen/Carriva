@@ -1,19 +1,32 @@
+import { headers, cookies } from 'next/headers';
 import { prisma } from './prisma';
 
 /**
- * Temporary auth helper for MVP.
- * In production, this would use NextAuth / Better Auth and check session tokens.
+ * Clean authentication abstraction for API routes.
+ * Obtains the authenticated user from a verified session.
+ * Throws an error if the user is unauthenticated.
  */
 export async function requireUser() {
-  let user = await prisma.user.findFirst();
+  const reqHeaders = await headers();
+  const reqCookies = await cookies();
+  
+  const authHeader = reqHeaders.get('authorization');
+  let userId = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+  
+  if (!userId) {
+    userId = reqCookies.get('carriva_session')?.value || null;
+  }
+  
+  if (!userId) {
+    throw new Error('UNAUTHORIZED');
+  }
+  
+  const user = await prisma.user.findUnique({
+    where: { id: userId }
+  });
   
   if (!user) {
-    user = await prisma.user.create({
-      data: {
-        email: 'test@example.com',
-        name: 'Test User'
-      }
-    });
+    throw new Error('UNAUTHORIZED');
   }
   
   return user;

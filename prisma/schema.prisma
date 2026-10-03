@@ -171,6 +171,8 @@ model Application {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([userId, profileId, jobId])
 }
 
 model GeneratedResume {
@@ -180,11 +182,15 @@ model GeneratedResume {
 
   templateVersion String
   modelVersion    String
+  profileVersion  Int
+  promptVersion   String
 
   content     String // Structured JSON data ready for rendering
   htmlContent String? // Rendered HTML cache
 
   createdAt DateTime @default(now())
+
+  @@unique([applicationId, profileVersion, promptVersion, templateVersion, modelVersion])
 }
 
 model GeneratedCoverLetter {
@@ -192,10 +198,15 @@ model GeneratedCoverLetter {
   applicationId String      @db.ObjectId
   application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
 
-  modelVersion String
+  modelVersion   String
+  profileVersion Int
+  promptVersion  String
+  
   content      String
 
   createdAt DateTime @default(now())
+
+  @@unique([applicationId, profileVersion, promptVersion, modelVersion])
 }
 
 model AIUsage {

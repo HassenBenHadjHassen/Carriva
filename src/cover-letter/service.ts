@@ -22,7 +22,7 @@ export class CoverLetterService {
 
     // Deduplication check in DB
     const existingGeneration = await prisma.generatedCoverLetter.findFirst({
-      where: { applicationId, modelVersion: modelName }
+      where: { applicationId, modelVersion: modelName, profileVersion, promptVersion: PROMPT_VERSION }
     });
 
     if (existingGeneration) {
@@ -37,6 +37,8 @@ export class CoverLetterService {
       data: {
         applicationId,
         modelVersion: modelName,
+        profileVersion,
+        promptVersion: PROMPT_VERSION,
         content: coverLetterData.content,
       }
     });
@@ -52,11 +54,10 @@ export class CoverLetterService {
 
     if (!generated) throw new Error("No generated cover letter found for this application");
 
-    return `
-      <div style="font-family: 'Inter', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; line-height: 1.6;">
-        <p style="white-space: pre-wrap;">${generated.content}</p>
-      </div>
-    `;
+    const $ = await import('cheerio').then(m => m.load('<div style="font-family: \'Inter\', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; line-height: 1.6;"><p style="white-space: pre-wrap;"></p></div>'));
+    $('p').text(generated.content);
+
+    return $.html();
   }
 }
 
