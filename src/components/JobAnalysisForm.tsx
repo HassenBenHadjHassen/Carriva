@@ -1,120 +1,158 @@
-"use client";
+"use client"
 
-import { useState } from 'react';
-
-import { JobAnalysisType } from '../ai/schemas';
+import { useState } from "react"
+import { JobAnalysisType } from "../ai/schemas"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "./ui/card"
+import { Textarea } from "./ui/textarea"
+import { Button } from "./ui/button"
+import { Badge } from "./ui/badge"
+import { Loader2, Zap } from "lucide-react"
 
 interface JobAnalysisFormProps {
-  profileId: string | null;
-  onAnalysisComplete?: (applicationId: string, analysis: JobAnalysisType) => void;
+  profileId: string | null
+  onAnalysisComplete?: (applicationId: string, analysis: JobAnalysisType) => void
 }
 
 export function JobAnalysisForm({ profileId, onAnalysisComplete }: JobAnalysisFormProps) {
-  const [jobDescription, setJobDescription] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [result, setResult] = useState<{ job: { title: string; company: string; }; analysis: { matched: string[]; missing: string[]; unknown: string[]; } } | null>(null);
-  const [error, setError] = useState('');
+  const [jobDescription, setJobDescription] = useState("")
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [result, setResult] = useState<{ job: { title: string; company: string; }; analysis: { matched: string[]; missing: string[]; unknown: string[]; } } | null>(null)
+  const [error, setError] = useState("")
 
   async function handleAnalyze() {
     if (!profileId) {
-      setError("Please upload your CV first to create a profile.");
-      return;
+      setError("Please upload your CV first to create a profile.")
+      return
     }
     if (!jobDescription.trim()) {
-      setError("Please paste a job description.");
-      return;
+      setError("Please paste a job description.")
+      return
     }
 
-    setIsAnalyzing(true);
-    setError('');
-    setResult(null);
+    setIsAnalyzing(true)
+    setError("")
+    setResult(null)
 
     try {
-      const res = await fetch('/api/analyze-job', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/analyze-job", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ profileId, jobDescription })
-      });
+      })
 
-      const data = await res.json();
+      const data = await res.json()
       
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to analyze job');
+        throw new Error(data.error || "Failed to analyze job")
       }
 
-      setResult(data);
+      setResult(data)
       if (onAnalysisComplete) {
-        onAnalysisComplete(data.applicationId, data.analysis);
+        onAnalysisComplete(data.applicationId, data.analysis)
       }
     } catch (err: unknown) {
-      setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      setError(err instanceof Error ? err.message : String(err))
     } finally {
-      setIsAnalyzing(false);
+      setIsAnalyzing(false)
     }
   }
 
   return (
-    <div className="space-y-4">
-      <textarea
-        className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
-        placeholder="Paste the job description here..."
-        value={jobDescription}
-        onChange={(e) => setJobDescription(e.target.value)}
-        disabled={isAnalyzing}
-      />
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Target Job Description</CardTitle>
+        <CardDescription>
+          Paste the description of the role you are applying for. We will analyze the requirements against your profile.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <Textarea
+          className="min-h-[160px] resize-y"
+          placeholder="e.g. Senior Frontend Engineer at Acme Corp... (Paste the full job description here)"
+          value={jobDescription}
+          onChange={(e) => setJobDescription(e.target.value)}
+          disabled={isAnalyzing}
+        />
+        
+        {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+        {!profileId && (
+          <p className="text-sm text-muted-foreground">You must upload your CV before analyzing a job.</p>
+        )}
+      </CardContent>
+      <CardFooter className="bg-muted/20 border-t px-6 py-4 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">
+          Analysis takes approximately 5-10 seconds.
+        </p>
+        <Button 
+          onClick={handleAnalyze} 
+          disabled={isAnalyzing || !profileId || !jobDescription.trim()}
+          className="w-full sm:w-auto"
+        >
+          {isAnalyzing ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Analyzing the role...
+            </>
+          ) : (
+            <>
+              <Zap className="mr-2 h-4 w-4" />
+              Analyze Match
+            </>
+          )}
+        </Button>
+      </CardFooter>
       
-      <button
-        onClick={handleAnalyze}
-        disabled={isAnalyzing || !profileId}
-        className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-      >
-        {isAnalyzing ? 'Analyzing Match...' : 'Analyze Match'}
-      </button>
-
-      {!profileId && (
-        <p className="text-xs text-red-500">You must complete Step 1 (Upload CV) before analyzing a job.</p>
-      )}
-
-      {error && <div className="text-sm text-red-600">{error}</div>}
-
       {result && (
-        <div className="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg text-sm space-y-4">
-          <div>
-            <h3 className="font-semibold text-gray-900">Extracted Role:</h3>
-            <p className="text-gray-700">{result.job.title} at {result.job.company}</p>
-          </div>
-          
-          <div>
-            <h3 className="font-semibold text-green-700">Matched Skills:</h3>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {result.analysis.matched.length === 0 && <span className="text-gray-500 italic">None identified</span>}
-              {result.analysis.matched.map((skill: string) => (
-                <span key={skill} className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-xs">{skill}</span>
-              ))}
+        <div className="border-t">
+          <CardContent className="pt-6 space-y-6">
+            <div>
+              <h3 className="text-sm font-medium text-muted-foreground mb-1">Extracted Role</h3>
+              <p className="text-lg font-semibold">{result.job.title} <span className="text-muted-foreground font-normal">at</span> {result.job.company}</p>
             </div>
-          </div>
+            
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="space-y-2 rounded-lg border bg-card p-4">
+                <h3 className="text-sm font-semibold text-green-600 flex items-center gap-2">
+                  <span className="flex h-2 w-2 rounded-full bg-green-600"></span>
+                  Matched Skills
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {result.analysis.matched.length === 0 && <span className="text-xs text-muted-foreground">None identified</span>}
+                  {result.analysis.matched.map(skill => (
+                    <Badge key={skill} variant="outline" className="bg-green-50 text-green-700 border-green-200">{skill}</Badge>
+                  ))}
+                </div>
+              </div>
 
-          <div>
-            <h3 className="font-semibold text-red-700">Missing Skills:</h3>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {result.analysis.missing.length === 0 && <span className="text-gray-500 italic">None identified</span>}
-              {result.analysis.missing.map((skill: string) => (
-                <span key={skill} className="bg-red-100 text-red-800 px-2 py-0.5 rounded-full text-xs">{skill}</span>
-              ))}
-            </div>
-          </div>
+              <div className="space-y-2 rounded-lg border bg-card p-4">
+                <h3 className="text-sm font-semibold text-yellow-600 flex items-center gap-2">
+                  <span className="flex h-2 w-2 rounded-full bg-yellow-600"></span>
+                  Requires Confirmation
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {result.analysis.unknown.length === 0 && <span className="text-xs text-muted-foreground">None identified</span>}
+                  {result.analysis.unknown.map(skill => (
+                    <Badge key={skill} variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">{skill}</Badge>
+                  ))}
+                </div>
+              </div>
 
-          <div>
-            <h3 className="font-semibold text-yellow-700">Unknown Skills (Need Clarification):</h3>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {result.analysis.unknown.length === 0 && <span className="text-gray-500 italic">None identified</span>}
-              {result.analysis.unknown.map((skill: string) => (
-                <span key={skill} className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs">{skill}</span>
-              ))}
+              <div className="space-y-2 rounded-lg border bg-card p-4">
+                <h3 className="text-sm font-semibold text-red-600 flex items-center gap-2">
+                  <span className="flex h-2 w-2 rounded-full bg-red-600"></span>
+                  Missing Skills
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {result.analysis.missing.length === 0 && <span className="text-xs text-muted-foreground">None identified</span>}
+                  {result.analysis.missing.map(skill => (
+                    <Badge key={skill} variant="outline" className="bg-red-50 text-red-700 border-red-200">{skill}</Badge>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          </CardContent>
         </div>
       )}
-    </div>
-  );
+    </Card>
+  )
 }

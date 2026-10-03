@@ -1,101 +1,142 @@
-"use client";
+"use client"
 
-import { useState } from 'react';
+import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "./ui/card"
+import { Button } from "./ui/button"
+import { Loader2, Download, FileText, Mail } from "lucide-react"
 
 interface DocumentGeneratorProps {
-  applicationId: string;
-  disabled: boolean;
+  applicationId: string
+  disabled: boolean
 }
 
 export function DocumentGenerator({ applicationId, disabled }: DocumentGeneratorProps) {
-  const [isGeneratingCV, setIsGeneratingCV] = useState(false);
-  const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false);
-  const [cvResult, setCvResult] = useState<{ id: string } | null>(null);
-  const [coverLetterResult, setCoverLetterResult] = useState<{ id: string } | null>(null);
-  const [error, setError] = useState('');
+  const [isGeneratingCV, setIsGeneratingCV] = useState(false)
+  const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false)
+  const [cvResult, setCvResult] = useState<{ id: string } | null>(null)
+  const [coverLetterResult, setCoverLetterResult] = useState<{ id: string } | null>(null)
+  const [error, setError] = useState("")
 
-  async function generateDocument(type: 'cv' | 'cover-letter') {
-    const isCV = type === 'cv';
-    if (isCV) setIsGeneratingCV(true);
-    else setIsGeneratingCoverLetter(true);
+  async function generateDocument(type: "cv" | "cover-letter") {
+    const isCV = type === "cv"
+    if (isCV) setIsGeneratingCV(true)
+    else setIsGeneratingCoverLetter(true)
     
-    setError('');
+    setError("")
 
     try {
       const res = await fetch(`/api/generate-${type}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ applicationId })
-      });
+      })
 
-      const data = await res.json();
+      const data = await res.json()
       
       if (!res.ok) {
-        throw new Error(data.error || `Failed to generate ${type}`);
+        throw new Error(data.error || `Failed to generate ${type}`)
       }
 
-      if (isCV) setCvResult(data.document);
-      else setCoverLetterResult(data.document);
+      if (isCV) setCvResult(data.document)
+      else setCoverLetterResult(data.document)
 
     } catch (err: unknown) {
-      setError(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      setError(err instanceof Error ? err.message : String(err))
     } finally {
-      if (isCV) setIsGeneratingCV(false);
-      else setIsGeneratingCoverLetter(false);
+      if (isCV) setIsGeneratingCV(false)
+      else setIsGeneratingCoverLetter(false)
     }
   }
 
   function handleDownloadPDF() {
-    window.open(`/api/download-pdf?applicationId=${applicationId}`, '_blank');
+    window.open(`/api/download-pdf?applicationId=${applicationId}`, "_blank")
   }
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 border rounded-lg bg-gray-50 flex flex-col items-center justify-center min-h-[120px]">
-          <h3 className="font-semibold mb-2">Tailored CV</h3>
-          {!cvResult ? (
-            <button
-              onClick={() => generateDocument('cv')}
-              disabled={disabled || isGeneratingCV}
-              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
-            >
-              {isGeneratingCV ? 'Generating...' : 'Generate CV'}
-            </button>
-          ) : (
-            <div className="text-green-600 text-sm font-medium">✓ Generated successfully</div>
-          )}
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Generate Application</CardTitle>
+        <CardDescription>
+          Create a factually accurate, beautifully formatted CV and cover letter tailored specifically to this role.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* CV Generator */}
+          <div className={`rounded-xl border p-6 flex flex-col items-center justify-center text-center space-y-4 transition-colors ${cvResult ? "bg-green-50/50 border-green-200" : "bg-card"}`}>
+            <div className={`h-12 w-12 rounded-full flex items-center justify-center ${cvResult ? "bg-green-100 text-green-600" : "bg-primary/10 text-primary"}`}>
+              <FileText className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">Tailored CV</h3>
+              <p className="text-sm text-muted-foreground mt-1">Highlights your most relevant experience.</p>
+            </div>
+            
+            {!cvResult ? (
+              <Button
+                onClick={() => generateDocument("cv")}
+                disabled={disabled || isGeneratingCV}
+                variant="outline"
+                className="w-full mt-2"
+              >
+                {isGeneratingCV ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Tailoring CV...</>
+                ) : (
+                  "Generate CV"
+                )}
+              </Button>
+            ) : (
+              <div className="w-full mt-2 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-md">
+                Generated Successfully
+              </div>
+            )}
+          </div>
+
+          {/* Cover Letter Generator */}
+          <div className={`rounded-xl border p-6 flex flex-col items-center justify-center text-center space-y-4 transition-colors ${coverLetterResult ? "bg-green-50/50 border-green-200" : "bg-card"}`}>
+            <div className={`h-12 w-12 rounded-full flex items-center justify-center ${coverLetterResult ? "bg-green-100 text-green-600" : "bg-primary/10 text-primary"}`}>
+              <Mail className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">Cover Letter</h3>
+              <p className="text-sm text-muted-foreground mt-1">A professional introduction aligned with the role.</p>
+            </div>
+            
+            {!coverLetterResult ? (
+              <Button
+                onClick={() => generateDocument("cover-letter")}
+                disabled={disabled || isGeneratingCoverLetter}
+                variant="outline"
+                className="w-full mt-2"
+              >
+                {isGeneratingCoverLetter ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Writing Letter...</>
+                ) : (
+                  "Generate Cover Letter"
+                )}
+              </Button>
+            ) : (
+              <div className="w-full mt-2 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-md">
+                Generated Successfully
+              </div>
+            )}
+          </div>
         </div>
-
-        <div className="p-4 border rounded-lg bg-gray-50 flex flex-col items-center justify-center min-h-[120px]">
-          <h3 className="font-semibold mb-2">Cover Letter</h3>
-          {!coverLetterResult ? (
-            <button
-              onClick={() => generateDocument('cover-letter')}
-              disabled={disabled || isGeneratingCoverLetter}
-              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
-            >
-              {isGeneratingCoverLetter ? 'Generating...' : 'Generate Cover Letter'}
-            </button>
-          ) : (
-            <div className="text-green-600 text-sm font-medium">✓ Generated successfully</div>
-          )}
-        </div>
-      </div>
-
-      {error && <div className="text-sm text-red-600">{error}</div>}
-
+        
+        {error && <p className="text-sm font-medium text-destructive text-center">{error}</p>}
+      </CardContent>
+      
       {(cvResult || coverLetterResult) && (
-        <div className="pt-4 border-t flex justify-end">
-          <button
-            onClick={handleDownloadPDF}
-            className="px-6 py-2 bg-gray-900 text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        <CardFooter className="bg-muted/20 border-t px-6 py-4 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-muted-foreground">
+            Documents are ready for review and export.
+          </p>
+          <Button onClick={handleDownloadPDF} className="w-full sm:w-auto" size="lg">
+            <Download className="mr-2 h-4 w-4" />
             Download PDF
-          </button>
-        </div>
+          </Button>
+        </CardFooter>
       )}
-    </div>
-  );
+    </Card>
+  )
 }
