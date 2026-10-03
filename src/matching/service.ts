@@ -58,9 +58,15 @@ export class MatchingService {
     const analysis = await cacheService.getOrSet(cacheKey, async () => {
       const userSkills = profile.user?.userSkills || [];
       // Combine confirmed, inferred, and generated skills, prioritizing confirmed
-      const normalizedUserSkills = new Set(
+      const trustedSkills = new Set(
         userSkills
-          .filter(us => us.confidence !== 'rejected')
+          .filter(us => ['confirmed', 'inferred', 'generated'].includes(us.confidence))
+          .map(us => this.normalizeSkill(us.skill.normalizedName))
+      );
+
+      const rejectedSkills = new Set(
+        userSkills
+          .filter(us => us.confidence === 'rejected')
           .map(us => this.normalizeSkill(us.skill.normalizedName))
       );
 
@@ -79,11 +85,16 @@ export class MatchingService {
         const rawReq = req.rawRequirement;
         const normalizedReq = this.normalizeSkill(rawReq);
         
-        // 1. Check strict confirmed skills
-        if (normalizedUserSkills.has(normalizedReq)) {
+        // 1. Check strict confirmed/inferred/generated skills
+        if (trustedSkills.has(normalizedReq)) {
           matched.push(rawReq);
-        } else {
-          // 2. Fallback heuristic: check if the normalized word appears in CV text
+        } 
+        // 2. Explicitly rejected skills must be marked as missing, bypassing heuristics
+        else if (rejectedSkills.has(normalizedReq)) {
+          missing.push(rawReq);
+        }
+        else {
+          // 3. Fallback heuristic: check if the normalized word appears in CV text
           const isMentioned = cvText.includes(normalizedReq.toLowerCase());
           if (isMentioned) {
             unknown.push(rawReq); // User might have it, but not explicitly confirmed as a "skill"
