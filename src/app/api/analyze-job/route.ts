@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { jobsService } from '../../../jobs/service';
-import { matchingService } from '../../../matching/service';
+import { applicationService } from '../../../applications/service';
 import { requireUser } from '../../../lib/auth';
 
 export async function POST(req: NextRequest) {
@@ -14,17 +13,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing profileId or jobDescription' }, { status: 400 });
     }
 
-    // 1. Extract the structured Job from the raw description
-    const job = await jobsService.analyzeJobDescription(user.id, jobDescription);
-
-    // 2. Perform the matching analysis
-    const result = await matchingService.compareProfileToJob(profileId, job.id);
+    // Use orchestration service to handle the main flow
+    const { application, matchAnalysis, job } = await applicationService.createApplication(user.id, profileId, jobDescription);
 
     return NextResponse.json({
       success: true,
       job,
-      applicationId: result.applicationId,
-      analysis: result.analysis
+      applicationId: application.id,
+      analysis: matchAnalysis
     });
     
   } catch (error: unknown) {

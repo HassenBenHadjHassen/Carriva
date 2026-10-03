@@ -1,4 +1,4 @@
-import { aiService } from '../ai/service';
+import { aiService, getActiveModelName } from '../ai/service';
 import { ResumeProfileType } from '../ai/schemas';
 import { cacheService } from '../cache/redis';
 import { prisma } from '../lib/prisma';
@@ -11,13 +11,13 @@ export class CareerService {
   async extractProfileFromCV(userId: string, filename: string, cvText: string) {
     const textHash = crypto.createHash('sha256').update(cvText).digest('hex');
     const { SCHEMA_VERSION, PROMPT_VERSION } = await import('../config/constants');
-    const modelName = process.env.AI_MODEL || 'default-model';
-    const cacheKey = `cv:${textHash}:${SCHEMA_VERSION}:${PROMPT_VERSION}:${modelName}`;
+    const modelName = getActiveModelName();
+    const cacheKey = `cv:${userId}:${textHash}:${SCHEMA_VERSION}:${PROMPT_VERSION}:${modelName}`;
 
     // 1. Check cache using getOrSet
     const profileData = await cacheService.getOrSet<ResumeProfileType>(cacheKey, async () => {
       console.log(`[CareerService] Cache miss for CV. Extracting with AI...`);
-      return await aiService.extractResume(cvText);
+      return await aiService.extractResume(userId, cvText);
     }, 60 * 60 * 24 * 7); // 7 days
 
     // 2. Save raw document

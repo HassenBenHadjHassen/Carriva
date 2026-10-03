@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma';
-import { aiService } from '../ai/service';
+import { aiService, getActiveModelName } from '../ai/service';
 import { cacheService } from '../cache/redis';
 import { PROMPT_VERSION } from '../config/constants';
 
@@ -12,12 +12,12 @@ export class CoverLetterService {
 
     if (!application) throw new Error("Application not found");
 
-    const modelName = process.env.AI_MODEL || 'default-model';
+    const modelName = getActiveModelName();
     const profileVersion = application.profile.version;
     const jobHash = application.job.hash;
     
     // Deterministic cache key
-    const cacheKey = `cover-letter:${profileVersion}:${jobHash}:${modelName}:${PROMPT_VERSION}:en`;
+    const cacheKey = `cover-letter:${application.userId}:${application.profileId}:${profileVersion}:${jobHash}:${modelName}:${PROMPT_VERSION}:en`;
 
     // Deduplication check in DB
     const existingGeneration = await prisma.generatedCoverLetter.findFirst({
@@ -29,7 +29,7 @@ export class CoverLetterService {
     }
 
     const coverLetterData = await cacheService.getOrSet(cacheKey, async () => {
-      return await aiService.generateCoverLetter(application.profile, application.job);
+      return await aiService.generateCoverLetter(application.userId, application.profile, application.job);
     }, 60 * 60 * 24 * 7); // 7 days
 
     const generated = await prisma.generatedCoverLetter.create({

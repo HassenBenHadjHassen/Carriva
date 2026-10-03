@@ -4,11 +4,13 @@ export interface StructuredGenerationRequest<T> {
   systemPrompt?: string;
   schema: unknown;
   schemaName: string;
+  userId?: string;
 }
 
 export interface TextGenerationRequest {
   prompt: string;
   systemPrompt?: string;
+  userId?: string;
 }
 
 export interface AIProvider {

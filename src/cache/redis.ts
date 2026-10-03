@@ -13,6 +13,8 @@ try {
   console.warn("Redis initialization failed, falling back to DB only", e);
 }
 
+const inflightPromises = new Map<string, Promise<any>>();
+
 export const cacheService = {
   async get<T>(key: string): Promise<T | null> {
     try {
@@ -77,14 +79,26 @@ export const cacheService = {
   },
 
   async getOrSet<T>(key: string, loader: () => Promise<T>, ttlSeconds?: number): Promise<T> {
-    const cached = await this.get<T>(key);
-    if (cached !== null) {
-      return cached;
+    if (inflightPromises.has(key)) {
+      return inflightPromises.get(key) as Promise<T>;
     }
-    
-    const freshData = await loader();
-    await this.set(key, freshData, ttlSeconds);
-    return freshData;
+
+    const promise = (async () => {
+      const cached = await this.get<T>(key);
+      if (cached !== null) {
+        return cached;
+      }
+      
+      const freshData = await loader();
+      await this.set(key, freshData, ttlSeconds);
+      return freshData;
+    })();
+
+    inflightPromises.set(key, promise);
+    try {
+      return await promise;
+    } finally {
+      inflightPromises.delete(key);
+    }
   }
 }
-

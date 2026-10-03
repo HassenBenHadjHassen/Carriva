@@ -3,14 +3,19 @@ import { matchingService } from '../matching/service';
 import { resumeService } from '../resume/service';
 import { coverLetterService } from '../cover-letter/service';
 
+import { jobsService } from '../jobs/service';
+
 export class ApplicationService {
   /**
    * Orchestrates the creation of an application.
    */
-  async createApplication(userId: string, profileId: string, jobId: string) {
-    // Check if application exists
+  async createApplication(userId: string, profileId: string, jobDescription: string) {
+    // 1. Extract the structured Job from the raw description
+    const job = await jobsService.analyzeJobDescription(userId, jobDescription);
+
+    // 2. Check if application exists
     let application = await prisma.application.findFirst({
-      where: { userId, profileId, jobId }
+      where: { userId, profileId, jobId: job.id }
     });
 
     if (!application) {
@@ -18,14 +23,14 @@ export class ApplicationService {
         data: {
           userId,
           profileId,
-          jobId,
+          jobId: job.id,
           status: 'Analyzed'
         }
       });
     }
 
-    // Run deterministic match analysis
-    const matchAnalysis = await matchingService.compareProfileToJob(profileId, jobId);
+    // 3. Run deterministic match analysis
+    const matchAnalysis = await matchingService.compareProfileToJob(profileId, job.id);
 
     // If there are unknown skills, we wait for confirmation. Otherwise, we can generate right away.
     if (matchAnalysis.analysis.unknown.length > 0) {
@@ -40,7 +45,7 @@ export class ApplicationService {
       });
     }
 
-    return { application, matchAnalysis: matchAnalysis.analysis };
+    return { application, matchAnalysis: matchAnalysis.analysis, job };
   }
 
   async confirmSkills(userId: string, applicationId: string, confirmedSkills: string[]) {

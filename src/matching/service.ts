@@ -8,7 +8,7 @@ export class MatchingService {
    * Simple deterministic skill normalizer for common aliases.
    */
   normalizeSkill(skill: string): string {
-    const s = skill.toLowerCase().trim().replace(/[^a-z0-9]/g, '');
+    const s = skill.toLowerCase().trim().replace(/[^a-z0-9+#.]/g, '');
     
     const aliases: Record<string, string> = {
       'reactjs': 'React',
@@ -53,7 +53,7 @@ export class MatchingService {
       throw new Error("Profile or Job not found");
     }
 
-    const cacheKey = `match:${profile.version}:${job.hash}:${MATCHING_VERSION}`;
+    const cacheKey = `match:${profile.userId}:${profile.id}:${profile.version}:${job.hash}:${MATCHING_VERSION}`;
     
     const analysis = await cacheService.getOrSet(cacheKey, async () => {
       const userSkills = profile.user?.userSkills || [];

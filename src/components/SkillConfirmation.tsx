@@ -61,29 +61,60 @@ export function SkillConfirmation({ applicationId, analysis, onConfirmed, isConf
         Review the skills required for this job. Check the ones you actually possess. 
         We will use this to accurately tailor your CV.
       </p>
-      
-      <div className="flex flex-wrap gap-2 mt-4">
-        {allSkills.map(skill => {
-          const isSelected = selectedSkills.has(skill);
-          let badgeColor = 'bg-gray-100 text-gray-800 border-gray-200';
-          
-          if (isSelected) {
-            if (analysis.matched.includes(skill)) badgeColor = 'bg-green-100 text-green-800 border-green-300';
-            else if (analysis.missing.includes(skill)) badgeColor = 'bg-red-100 text-red-800 border-red-300';
-            else badgeColor = 'bg-blue-100 text-blue-800 border-blue-300';
-          }
+      <div className="space-y-6 mt-4">
+        {analysis.unknown.map(skill => (
+          <div key={skill} className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-xs font-semibold text-yellow-800 uppercase tracking-wider mb-1">Unknown requirement</p>
+            <p className="text-gray-900 font-medium mb-3">Do you have experience with <strong>{skill}</strong>?</p>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => toggleSkill(skill)}
+                disabled={isConfirmed || isSubmitting}
+                className={`px-4 py-2 text-sm font-medium rounded border ${selectedSkills.has(skill) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+              >Yes</button>
+              <button 
+                onClick={() => {
+                  if (isConfirmed) return;
+                  const newSelected = new Set(selectedSkills);
+                  newSelected.delete(skill);
+                  setSelectedSkills(newSelected);
+                }}
+                disabled={isConfirmed || isSubmitting}
+                className={`px-4 py-2 text-sm font-medium rounded border ${!selectedSkills.has(skill) ? 'bg-gray-200 text-gray-800 border-gray-300' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+              >No / Not sure</button>
+            </div>
+          </div>
+        ))}
 
-          return (
-            <button
-              key={skill}
-              onClick={() => toggleSkill(skill)}
-              disabled={isConfirmed || isSubmitting}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium border cursor-pointer transition-colors ${badgeColor} ${!isConfirmed && !isSubmitting ? 'hover:brightness-95' : 'opacity-80'}`}
-            >
-              {isSelected ? '✓ ' : '+ '} {skill}
-            </button>
-          );
-        })}
+        {analysis.missing.map(skill => (
+          <div key={skill} className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-xs font-semibold text-red-800 uppercase tracking-wider mb-1">Missing requirement</p>
+            <p className="text-gray-900 font-medium mb-3">Do you have experience with <strong>{skill}</strong>?</p>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => toggleSkill(skill)}
+                disabled={isConfirmed || isSubmitting}
+                className={`px-4 py-2 text-sm font-medium rounded border ${selectedSkills.has(skill) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+              >Yes</button>
+              <button 
+                onClick={() => {
+                  if (isConfirmed) return;
+                  const newSelected = new Set(selectedSkills);
+                  newSelected.delete(skill);
+                  setSelectedSkills(newSelected);
+                }}
+                disabled={isConfirmed || isSubmitting}
+                className={`px-4 py-2 text-sm font-medium rounded border ${!selectedSkills.has(skill) ? 'bg-gray-200 text-gray-800 border-gray-300' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+              >No</button>
+            </div>
+          </div>
+        ))}
+
+        {analysis.unknown.length === 0 && analysis.missing.length === 0 && (
+          <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+            <p className="text-green-800 font-medium">No unknown or missing skills to confirm! You're a perfect match.</p>
+          </div>
+        )}
       </div>
 
       {error && <div className="text-sm text-red-600 mt-2">{error}</div>}

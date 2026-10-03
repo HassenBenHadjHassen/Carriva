@@ -1,4 +1,4 @@
-import { aiService } from '../ai/service';
+import { aiService, getActiveModelName } from '../ai/service';
 import { cacheService } from '../cache/redis';
 import { prisma } from '../lib/prisma';
 import { SCHEMA_VERSION, PROMPT_VERSION } from '../config/constants';
@@ -23,7 +23,7 @@ export class JobsService {
   async analyzeJobDescription(userId: string, descriptionText: string) {
     const normalized = this.normalizeJobDescription(descriptionText);
     const normalizedHash = crypto.createHash('sha256').update(normalized).digest('hex');
-    const modelName = process.env.AI_MODEL || 'default-model';
+    const modelName = getActiveModelName();
     const cacheKey = `job:${normalizedHash}:${SCHEMA_VERSION}:${PROMPT_VERSION}:${modelName}`;
 
     // Deduplication check: See if this exact job description has been analyzed already
@@ -40,13 +40,12 @@ export class JobsService {
     // Call AI Service (orchestration handled by cacheService getOrSet)
     const jobData = await cacheService.getOrSet(cacheKey, async () => {
       console.log(`[JobsService] Extracting Job Description with AI...`);
-      return await aiService.extractJob(descriptionText);
+      return await aiService.extractJob(userId, descriptionText);
     }, 60 * 60 * 24 * 30); // 30 days
 
     // Save Job and its Requirements to Prisma
     const job = await prisma.job.create({
       data: {
-        userId,
         title: jobData.title,
         company: jobData.company,
         description: descriptionText,

@@ -11,6 +11,15 @@ import {
   CoverLetterSchema, CoverLetterType
 } from './schemas';
 
+export function getActiveModelName(): string {
+  const provider = process.env.AI_PROVIDER?.toLowerCase();
+  if (process.env.AI_MODEL) return process.env.AI_MODEL;
+  if (provider === 'google') return process.env.GOOGLE_AI_MODEL || 'gemini-1.5-flash';
+  if (provider === 'openai') return process.env.OPENAI_AI_MODEL || 'gpt-4o';
+  if (provider === 'anthropic') return process.env.ANTHROPIC_AI_MODEL || 'claude-3-5-sonnet-20241022';
+  return 'mock-model';
+}
+
 export class AIService {
   private provider: AIProvider;
 
@@ -34,47 +43,52 @@ export class AIService {
     }
   }
 
-  async generateText(prompt: string, systemPrompt?: string): Promise<string> {
-    return this.provider.generateText({ prompt, systemPrompt });
+  async generateText(userId: string | undefined, prompt: string, systemPrompt?: string): Promise<string> {
+    return this.provider.generateText({ prompt, systemPrompt, userId });
   }
 
-  async extractResume(cvText: string): Promise<ResumeProfileType> {
+  async extractResume(userId: string | undefined, cvText: string): Promise<ResumeProfileType> {
     return this.provider.generateStructured<ResumeProfileType>({
       prompt: `Extract the following CV into a structured JSON profile matching the schema. DO NOT invent details. If something is missing, leave it empty or omit it.\n\nCV Text:\n${cvText}`,
       schema: ResumeProfileSchema,
-      schemaName: 'ResumeProfile'
+      schemaName: 'ResumeProfile',
+      userId
     });
   }
 
-  async extractJob(jobText: string): Promise<JobExtractionType> {
+  async extractJob(userId: string | undefined, jobText: string): Promise<JobExtractionType> {
     return this.provider.generateStructured<JobExtractionType>({
       prompt: `Extract the following job description into structured data. Identify key skills required and whether they are mandatory.\n\nJob Text:\n${jobText}`,
       schema: JobExtractionSchema,
-      schemaName: 'JobExtraction'
+      schemaName: 'JobExtraction',
+      userId
     });
   }
 
-  async analyzeMatch(profileData: unknown, jobData: unknown): Promise<JobAnalysisType> {
+  async analyzeMatch(userId: string | undefined, profileData: unknown, jobData: unknown): Promise<JobAnalysisType> {
     return this.provider.generateStructured<JobAnalysisType>({
       prompt: `Compare the candidate's profile to the job requirements. Categorize the job's required skills into 'matched' (candidate clearly has it), 'missing' (candidate clearly does not have it based on constraints), and 'unknown' (not mentioned in profile, but possible).\n\nProfile:\n${JSON.stringify(profileData)}\n\nJob:\n${JSON.stringify(jobData)}`,
       schema: JobAnalysisSchema,
-      schemaName: 'JobAnalysis'
+      schemaName: 'JobAnalysis',
+      userId
     });
   }
 
-  async generateTailoredResume(profileData: unknown, jobData: unknown): Promise<TailoredResumeType> {
+  async generateTailoredResume(userId: string | undefined, profileData: unknown, jobData: unknown): Promise<TailoredResumeType> {
     return this.provider.generateStructured<TailoredResumeType>({
       prompt: `Generate a tailored resume based on the candidate's career profile and the target job description. Focus the summary and the bullet points on matching the job requirements. Keep it professional and factual; DO NOT invent experiences or skills that do not exist in the profile.\n\nProfile:\n${JSON.stringify(profileData)}\n\nJob:\n${JSON.stringify(jobData)}`,
       schema: TailoredResumeSchema,
-      schemaName: 'TailoredResume'
+      schemaName: 'TailoredResume',
+      userId
     });
   }
 
-  async generateCoverLetter(profileData: unknown, jobData: unknown): Promise<CoverLetterType> {
+  async generateCoverLetter(userId: string | undefined, profileData: unknown, jobData: unknown): Promise<CoverLetterType> {
     return this.provider.generateStructured<CoverLetterType>({
       prompt: `Write a compelling cover letter based on the candidate's profile and the target job description. The cover letter should highlight how the candidate's specific experiences align with the job requirements. Do not invent facts.\n\nProfile:\n${JSON.stringify(profileData)}\n\nJob:\n${JSON.stringify(jobData)}`,
       schema: CoverLetterSchema,
-      schemaName: 'CoverLetter'
+      schemaName: 'CoverLetter',
+      userId
     });
   }
 }
