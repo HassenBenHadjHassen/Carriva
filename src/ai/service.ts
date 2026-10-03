@@ -3,6 +3,7 @@ import { MockAIProvider } from './providers/mock';
 import { GoogleAIProvider } from './providers/google';
 import { OpenAIProvider } from './providers/openai';
 import { AnthropicAIProvider } from './providers/anthropic';
+import { HuggingFaceAIProvider } from './providers/huggingface';
 import { getActiveProvider } from './config';
 import { 
   ResumeProfileSchema, ResumeProfileType, 
@@ -24,6 +25,8 @@ export class AIService {
       this.provider = new OpenAIProvider();
     } else if (providerName === 'anthropic') {
       this.provider = new AnthropicAIProvider();
+    } else if (providerName === 'huggingface') {
+      this.provider = new HuggingFaceAIProvider();
     } else if (providerName === 'mock') {
       this.provider = new MockAIProvider();
     } else {

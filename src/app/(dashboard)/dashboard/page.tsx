@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { DiscardApplicationButton } from "@/components/DiscardApplicationButton"
 import { FileText, Plus, Clock, Briefcase } from "lucide-react"
 
 export default async function DashboardPage() {
@@ -63,6 +64,9 @@ export default async function DashboardPage() {
                     <Clock className="h-3 w-3" />
                     {new Date(app.updatedAt).toLocaleDateString()}
                   </span>
+                  <div className="-mt-1 -mr-2">
+                    <DiscardApplicationButton applicationId={app.id} />
+                  </div>
                 </div>
                 <CardTitle className="text-lg line-clamp-1" title={app.job?.title || "Untitled Role"}>
                   {app.job?.title || "Untitled Role"}

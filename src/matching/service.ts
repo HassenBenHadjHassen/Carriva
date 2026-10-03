@@ -27,7 +27,14 @@ export class MatchingService {
       'k8s': 'Kubernetes',
       'kubernetes': 'Kubernetes',
       'vuejs': 'Vue.js',
-      'vue': 'Vue.js'
+      'vue': 'Vue.js',
+      'css3': 'CSS',
+      'css': 'CSS',
+      'html5': 'HTML',
+      'html': 'HTML',
+      'python3': 'Python',
+      'nextjs': 'Next.js',
+      'next': 'Next.js'
     };
 
     return aliases[s] || skill.trim();
@@ -106,10 +113,44 @@ export class MatchingService {
         }
       }
 
+      // Check Experience
+      let meetsExperience: boolean | undefined = undefined;
+      if (job.minimumYearsOfExperience !== null && job.minimumYearsOfExperience !== undefined) {
+        if (profile.totalYearsOfExperience !== null && profile.totalYearsOfExperience !== undefined) {
+          meetsExperience = profile.totalYearsOfExperience >= job.minimumYearsOfExperience;
+        } else {
+          // If we don't know the profile YoE, we can't be sure
+          meetsExperience = false;
+        }
+      }
+
+      // Check Education
+      let meetsEducation: boolean | undefined = undefined;
+      if (job.minimumEducation) {
+        // Very rough deterministic check
+        const jobEdu = job.minimumEducation.toLowerCase();
+        if (profile.educations && profile.educations.length > 0) {
+           const hasDegree = profile.educations.some(e => {
+             const degree = e.degree.toLowerCase();
+             // If job wants Bachelor, and user has Bachelor or Master or PhD
+             if (jobEdu.includes('bachelor') && (degree.includes('bachelor') || degree.includes('bsc') || degree.includes('bs') || degree.includes('master') || degree.includes('msc') || degree.includes('phd'))) return true;
+             if (jobEdu.includes('master') && (degree.includes('master') || degree.includes('msc') || degree.includes('ms') || degree.includes('phd'))) return true;
+             if (jobEdu.includes('phd') && degree.includes('phd')) return true;
+             // Generic fallback
+             return degree.includes(jobEdu) || jobEdu.includes(degree);
+           });
+           meetsEducation = hasDegree;
+        } else {
+           meetsEducation = false;
+        }
+      }
+
       return {
         matched,
         missing,
-        unknown
+        unknown,
+        meetsExperience,
+        meetsEducation
       };
     }, 60 * 60 * 24 * 7);
 

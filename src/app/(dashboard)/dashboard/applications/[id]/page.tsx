@@ -6,9 +6,11 @@ import { ArrowLeft, Briefcase, FileText, CheckCircle2 } from "lucide-react"
 import { DocumentGenerator } from "@/components/DocumentGenerator"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-export default async function ApplicationDetailsPage({ params }: { params: { id: string } }) {
+import { DiscardApplicationButton } from "@/components/DiscardApplicationButton"
+
+export default async function ApplicationDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser()
-  const appId = params.id
+  const { id: appId } = await params
 
   const application = await prisma.application.findUnique({
     where: { id: appId, userId: user.id },
@@ -40,6 +42,7 @@ export default async function ApplicationDetailsPage({ params }: { params: { id:
             <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${application.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-secondary text-secondary-foreground'}`}>
               {application.status === 'completed' ? 'Completed' : 'Draft'}
             </span>
+            <DiscardApplicationButton applicationId={application.id} shouldRedirect={true} />
           </div>
         </div>
       </div>
