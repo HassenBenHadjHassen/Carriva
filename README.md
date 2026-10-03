@@ -16,6 +16,7 @@ Carriva is an AI-powered CV tailoring web application designed to help users ext
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Database**: MongoDB (via [Prisma ORM](https://www.prisma.io/))
+- **Authentication**: Better Auth (with MongoDB adapter)
 - **Cache**: [Upstash Redis](https://upstash.com/)
 - **Schema Validation**: Zod
 

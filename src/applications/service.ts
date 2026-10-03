@@ -10,7 +10,13 @@ export class ApplicationService {
    * Orchestrates the creation of an application.
    */
   async createApplication(userId: string, profileId: string, jobDescription: string) {
-    // 1. Extract the structured Job from the raw description
+    // 1. Verify profile ownership
+    const profile = await prisma.careerProfile.findUnique({ where: { id: profileId } });
+    if (!profile || profile.userId !== userId) {
+      throw new Error('FORBIDDEN');
+    }
+
+    // 2. Extract the structured Job from the raw description
     const job = await jobsService.analyzeJobDescription(userId, jobDescription);
 
     // 2. Check if application exists

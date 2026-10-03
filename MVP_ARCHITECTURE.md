@@ -112,7 +112,7 @@ E2E (PDF generation): `npm run test:e2e`
 
 ## 10. Security & Orchestration
 
-- **Authentication & Authorization**: API endpoints are secured behind `requireUser()` which validates bearer tokens or session cookies. Domain services enforce entity ownership recursively.
+- **Authentication & Authorization**: Carriva uses **Better Auth** with its native MongoDB adapter as the sole authentication authority. API endpoints are secured behind `requireUser()` which validates the server session and strictly enforces domain ownership recursively (e.g., `profile.userId === authenticatedUser.id` and `application.userId === authenticatedUser.id`). Fake stub authentications and bearer tokens are strictly removed.
 - **Rate Limiting**: Rate limits (e.g. 10 CV uploads per hour) are enforced via `@upstash/redis` to prevent abuse.
 - **Workflow Orchestration**: Generation workflows are managed uniformly via `ApplicationService` handling safe document transition states instead of separate decoupled APIs.
 - **Validation**: All API boundary payloads are strictly typed and parsed with `zod`.
