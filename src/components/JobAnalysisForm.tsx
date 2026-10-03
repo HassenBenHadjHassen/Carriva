@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 
+import { JobAnalysisType } from '../ai/schemas';
+
 interface JobAnalysisFormProps {
   profileId: string | null;
-  onAnalysisComplete?: (applicationId: string, analysis: any) => void;
+  onAnalysisComplete?: (applicationId: string, analysis: JobAnalysisType) => void;
 }
 
 export function JobAnalysisForm({ profileId, onAnalysisComplete }: JobAnalysisFormProps) {

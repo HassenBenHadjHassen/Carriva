@@ -6,10 +6,12 @@ import { JobAnalysisForm } from '../components/JobAnalysisForm';
 import { SkillConfirmation } from '../components/SkillConfirmation';
 import { DocumentGenerator } from '../components/DocumentGenerator';
 
+import { JobAnalysisType } from '../ai/schemas';
+
 export default function DashboardPage() {
   const [profileId, setProfileId] = useState<string | null>(null);
   const [applicationId, setApplicationId] = useState<string | null>(null);
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [analysisResult, setAnalysisResult] = useState<JobAnalysisType | null>(null);
   const [skillsConfirmed, setSkillsConfirmed] = useState(false);
 
   return (
