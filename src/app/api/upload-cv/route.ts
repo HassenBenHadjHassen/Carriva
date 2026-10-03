@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { careerService } from '../../../career/service';
 import { requireUser } from '../../../lib/auth';
-import pdfParse from 'pdf-parse';
+import { PDFParse } from 'pdf-parse';
 
 export async function POST(req: NextRequest) {
   try {
@@ -19,8 +19,10 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
-      const parsed = await pdfParse(buffer);
+      const parser = new PDFParse({ data: buffer });
+      const parsed = await parser.getText();
       cvText = parsed.text;
+      await parser.destroy();
     } else {
       cvText = buffer.toString('utf-8');
     }
