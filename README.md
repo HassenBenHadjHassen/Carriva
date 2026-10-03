@@ -4,10 +4,12 @@ Carriva is an AI-powered CV tailoring web application designed to help users ext
 
 ## Features
 
-- **CV Upload & Extraction**: Convert existing CVs into structured career profiles.
+- **CV Upload & Extraction**: Convert existing CVs into structured career profiles, automatically extracting work experience, education, skills, and contact information.
 - **Job Analysis**: Compare your profile against job descriptions to identify missing and matching skills.
-- **AI-Powered Tailoring**: Generate customized CVs and cover letters targeted to a specific job.
-- **Provider Agnostic**: Switch seamlessly between AI providers (Anthropic, OpenAI, Google) or use a local Mock provider for cost-free development.
+- **AI-Powered Tailoring**: Generate customized CVs and cover letters targeted to a specific job, with intelligent placeholder replacement.
+- **Provider Agnostic & Resilient**: Switch seamlessly between AI providers (Google, Anthropic, OpenAI, HuggingFace) or use a local Mock provider. Features an automatic fallback system (e.g., switches to HuggingFace if Google quota is exceeded).
+- **Application Tracking**: Manage your job applications across different stages (Draft, Applied, Interview, Offer, Rejected, Archived) with color-coded status badges.
+- **High-Performance PDF Generation**: Fast, low-latency PDF downloads powered by a highly optimized Puppeteer browser singleton.
 - **Caching Layer**: Heavily caches AI responses (via Upstash Redis) and artifacts to optimize API costs and speed.
 
 ## Tech Stack
