@@ -15,6 +15,7 @@ interface DocumentGeneratorProps {
 export function DocumentGenerator({ applicationId, disabled, initialHasCV = false, initialHasCoverLetter = false }: DocumentGeneratorProps) {
   const [isGeneratingCV, setIsGeneratingCV] = useState(false)
   const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
   const [cvResult, setCvResult] = useState<{ id: string } | null>(initialHasCV ? { id: "cached" } : null)
   const [coverLetterResult, setCoverLetterResult] = useState<{ id: string } | null>(initialHasCoverLetter ? { id: "cached" } : null)
   const [error, setError] = useState("")
@@ -50,8 +51,23 @@ export function DocumentGenerator({ applicationId, disabled, initialHasCV = fals
     }
   }
 
-  function handleDownloadPDF() {
-    window.open(`/api/download-pdf?applicationId=${applicationId}`, "_blank")
+  async function handleDownloadPDF() {
+    setIsDownloading(true)
+    try {
+      const res = await fetch(`/api/download-pdf?applicationId=${applicationId}`)
+      if (!res.ok) throw new Error('Failed to generate PDF')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = 'application-documents.pdf'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to download PDF')
+    } finally {
+      setIsDownloading(false)
+    }
   }
 
   return (
@@ -133,9 +149,12 @@ export function DocumentGenerator({ applicationId, disabled, initialHasCV = fals
           <p className="text-sm text-muted-foreground">
             Documents are ready for review and export.
           </p>
-          <Button onClick={handleDownloadPDF} className="w-full sm:w-auto" size="lg">
-            <Download className="mr-2 h-4 w-4" />
-            Download PDF
+          <Button onClick={handleDownloadPDF} disabled={isDownloading} className="w-full sm:w-auto" size="lg">
+            {isDownloading ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Preparing PDF...</>
+            ) : (
+              <><Download className="mr-2 h-4 w-4" /> Download PDF</>
+            )}
           </Button>
         </CardFooter>
       )}

@@ -57,8 +57,7 @@ export class CoverLetterService {
 
     const $ = await import('cheerio').then(m => m.load('<div style="font-family: \'Inter\', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; line-height: 1.6; font-size: 14px; color: #333;"></div>'));
     
-    const lines = generated.content.split(/
-+/);
+    const lines = generated.content.split(/\n+/);
     lines.forEach(line => {
       if (line.trim()) {
         $('div').append($('<p style="margin-bottom: 1em;"></p>').text(line.trim()));

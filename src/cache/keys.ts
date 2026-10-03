@@ -10,8 +10,8 @@ export const cacheKeys = {
   coverLetterGeneration: (userId: string, profileId: string, profileVersion: number, jobHash: string, modelName: string, lang = 'en') => 
     `cover-letter:${userId}:${profileId}:${profileVersion}:${jobHash}:${modelName}:${PROMPT_VERSION}:${lang}`,
     
-  htmlRender: (resumeId: string) => 
-    `html:${resumeId}:${TEMPLATE_VERSION}`,
+  htmlRender: (resumeId: string, userUpdatedAt: Date) => 
+    `html:${resumeId}:${TEMPLATE_VERSION}:${userUpdatedAt.getTime()}`,
     
   pdf: (type: string, cvId: string, clId: string) => 
     `pdf:${type}:${cvId}:${clId}:${TEMPLATE_VERSION}`

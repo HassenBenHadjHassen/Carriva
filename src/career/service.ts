@@ -103,16 +103,20 @@ export class CareerService {
 
     // 5. Update User Contact Info if provided
     if (profileData.contactInfo) {
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          phone: profileData.contactInfo.phone || undefined,
-          website: profileData.contactInfo.website || undefined,
-          github: profileData.contactInfo.github || undefined,
-          linkedin: profileData.contactInfo.linkedin || undefined,
-          location: profileData.contactInfo.location || undefined,
-        }
-      });
+      const contactUpdate: Record<string, string> = {};
+      const ci = profileData.contactInfo;
+      if (ci.phone)    contactUpdate.phone    = ci.phone;
+      if (ci.website)  contactUpdate.website  = ci.website;
+      if (ci.github)   contactUpdate.github   = ci.github;
+      if (ci.linkedin) contactUpdate.linkedin = ci.linkedin;
+      if (ci.location) contactUpdate.location = ci.location;
+
+      if (Object.keys(contactUpdate).length > 0) {
+        await prisma.user.update({
+          where: { id: userId },
+          data: contactUpdate
+        });
+      }
     }
 
     return profile;

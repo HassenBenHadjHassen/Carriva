@@ -8,9 +8,7 @@ export function getActiveProvider(): string {
   throw new Error(`Unsupported AI_PROVIDER configuration: ${provider}`);
 }
 
-export function getActiveModelName(): string {
-  const provider = getActiveProvider();
-  
+export function getModelNameForProvider(provider: string): string {
   switch (provider) {
     case 'google':
       return process.env.GOOGLE_AI_MODEL || 'gemini-2.5-flash';
@@ -25,3 +23,7 @@ export function getActiveModelName(): string {
   }
 }
 
+/** Convenience wrapper — returns the model for whichever provider is currently active. */
+export function getActiveModelName(): string {
+  return getModelNameForProvider(getActiveProvider());
+}

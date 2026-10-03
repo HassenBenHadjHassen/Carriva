@@ -4,7 +4,7 @@ import { coverLetterService } from '../../../cover-letter/service';
 import { requireUser } from '../../../lib/auth';
 import { handleApiError } from '../../../lib/api-response';
 import { cacheKeys } from '../../../cache/keys';
-import puppeteer from 'puppeteer';
+import { getBrowser } from '../../../lib/puppeteer';
 
 export async function GET(req: NextRequest) {
   try {
@@ -57,10 +57,10 @@ export async function GET(req: NextRequest) {
 
       fullHtml += `</body></html>`;
 
-      // Render PDF with Puppeteer
-      const browser = await puppeteer.launch({ headless: true });
+      // Render PDF with shared Puppeteer browser (reused across requests)
+      const browser = await getBrowser();
+      const page = await browser.newPage();
       try {
-        const page = await browser.newPage();
         await page.setContent(fullHtml, { waitUntil: 'domcontentloaded' });
         const pdfUint8Array = await page.pdf({ 
           format: 'A4', 
@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
         });
         return Buffer.from(pdfUint8Array).toString('base64');
       } finally {
-        await browser.close();
+        await page.close();
       }
     }, 60 * 60 * 24 * 7); // 7 days cache
 

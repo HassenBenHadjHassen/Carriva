@@ -61,20 +61,20 @@ export class ResumeService {
 
     if (!generated) throw new Error("No generated resume found for this application");
 
-    // Check cache for HTML
-    const cacheKey = cacheKeys.htmlRender(generated.id);
-    if (generated.htmlContent) {
-      return generated.htmlContent;
-    }
+    // Fetch application + user now so we can key the cache on user.updatedAt.
+    // This ensures any profile change (phone, linkedin, etc.) busts the HTML cache.
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { profile: { include: { experiences: true, educations: true, projects: true, user: true } } }
+    });
+    if (!application) throw new Error("Application not found");
+    const profile = application.profile;
+
+    const cacheKey = cacheKeys.htmlRender(generated.id, profile.user.updatedAt);
 
     const htmlContent = await cacheService.getOrSet(cacheKey, async () => {
       const content = JSON.parse(generated.content);
-      const application = await prisma.application.findUnique({
-        where: { id: applicationId },
-        include: { profile: { include: { experiences: true, educations: true, projects: true, user: true } } }
-      });
-      const profile = application!.profile;
-      
+
       const templatePath = path.join(process.cwd(), 'template', 'index.html');
       const rawHtml = await fs.readFile(templatePath, 'utf-8');
       
@@ -102,36 +102,36 @@ export class ResumeService {
         if (profile.user.email) {
           contactList.find('li').eq(0).find('a').text(profile.user.email).attr('href', `mailto:${profile.user.email}`);
         } else {
-          contactList.find('li').eq(0).hide();
+          contactList.find('li').eq(0).css('display', 'none');
         }
         if (profile.user.phone) {
           contactList.find('li').eq(1).find('a').text(profile.user.phone).attr('href', `tel:${profile.user.phone.replace(/\\s/g, '')}`);
-          contactList.find('li').eq(1).show();
+          contactList.find('li').eq(1).css('display', '');
         } else {
-          contactList.find('li').eq(1).hide();
+          contactList.find('li').eq(1).css('display', 'none');
         }
         if (profile.user.website) {
           contactList.find('li').eq(2).find('a').text(profile.user.website).attr('href', profile.user.website);
-          contactList.find('li').eq(2).show();
+          contactList.find('li').eq(2).css('display', '');
         } else {
-          contactList.find('li').eq(2).hide();
+          contactList.find('li').eq(2).css('display', 'none');
         }
         if (profile.user.github) {
           contactList.find('li').eq(3).find('a').text(profile.user.github).attr('href', profile.user.github);
-          contactList.find('li').eq(3).show();
+          contactList.find('li').eq(3).css('display', '');
         } else {
-          contactList.find('li').eq(3).hide();
+          contactList.find('li').eq(3).css('display', 'none');
         }
         if (profile.user.linkedin) {
           contactList.find('li').eq(4).find('a').text(profile.user.linkedin).attr('href', profile.user.linkedin);
-          contactList.find('li').eq(4).show();
+          contactList.find('li').eq(4).css('display', '');
         } else {
-          contactList.find('li').eq(4).hide();
+          contactList.find('li').eq(4).css('display', 'none');
         }
         if (profile.user.location) {
-          contactList.find('li.contact-availability').text(profile.user.location).show();
+          contactList.find('li.contact-availability').text(profile.user.location).css('display', '');
         } else {
-          contactList.find('li.contact-availability').hide();
+          contactList.find('li.contact-availability').css('display', 'none');
         }
 
         // Inject Summary

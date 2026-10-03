@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { UploadForm } from "@/components/UploadForm"
+import { ContactInfoForm } from "@/components/ContactInfoForm"
 import { FileText, CheckCircle2 } from "lucide-react"
 
 export default async function ProfilePage() {
@@ -28,6 +29,17 @@ export default async function ProfilePage() {
         <h1 className="text-3xl font-bold tracking-tight">Career Profile</h1>
         <p className="text-muted-foreground mt-1">Manage your foundational career information.</p>
       </div>
+
+      <ContactInfoForm
+        initialData={{
+          name:     user.name     ?? undefined,
+          phone:    user.phone    ?? undefined,
+          website:  user.website  ?? undefined,
+          github:   user.github   ?? undefined,
+          linkedin: user.linkedin ?? undefined,
+          location: user.location ?? undefined,
+        }}
+      />
 
       {!profile ? (
         <Card className="border-dashed flex flex-col items-center justify-center p-8 text-center bg-muted/10 max-w-2xl mx-auto">

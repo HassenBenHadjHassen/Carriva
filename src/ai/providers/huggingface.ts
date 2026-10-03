@@ -2,7 +2,7 @@ import { generateObject, generateText } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { AIProvider, StructuredGenerationRequest, TextGenerationRequest } from '../provider';
 import { prisma } from '../../lib/prisma';
-import { getActiveModelName } from '../config';
+import { getModelNameForProvider } from '../config';
 
 const huggingface = createOpenAI({
   baseURL: 'https://router.huggingface.co/v1',
@@ -12,7 +12,7 @@ const huggingface = createOpenAI({
 export class HuggingFaceAIProvider implements AIProvider {
   async generateStructured<T>(request: StructuredGenerationRequest<T>): Promise<T> {
     console.log(`[HuggingFace] Generating structured data for schema: ${request.schemaName}`);
-    const modelName = getActiveModelName();
+    const modelName = getModelNameForProvider('huggingface');
     
     const { object, usage } = await generateObject({
       model: huggingface(modelName),
@@ -39,7 +39,7 @@ export class HuggingFaceAIProvider implements AIProvider {
 
   async generateText(request: TextGenerationRequest): Promise<string> {
     console.log(`[HuggingFace] Generating text`);
-    const modelName = getActiveModelName();
+    const modelName = getModelNameForProvider('huggingface');
     
     const { text, usage } = await generateText({
       model: huggingface(modelName),
