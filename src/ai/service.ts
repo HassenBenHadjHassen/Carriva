@@ -3,7 +3,13 @@ import { MockAIProvider } from './providers/mock';
 import { GoogleAIProvider } from './providers/google';
 import { OpenAIProvider } from './providers/openai';
 import { AnthropicAIProvider } from './providers/anthropic';
-import { ResumeProfileSchema, ResumeProfileType, JobExtractionSchema, JobExtractionType, JobAnalysisSchema, JobAnalysisType } from './schemas';
+import { 
+  ResumeProfileSchema, ResumeProfileType, 
+  JobExtractionSchema, JobExtractionType, 
+  JobAnalysisSchema, JobAnalysisType,
+  TailoredResumeSchema, TailoredResumeType,
+  CoverLetterSchema, CoverLetterType
+} from './schemas';
 
 export class AIService {
   private provider: AIProvider;
@@ -53,6 +59,22 @@ export class AIService {
       prompt: `Compare the candidate's profile to the job requirements. Categorize the job's required skills into 'matched' (candidate clearly has it), 'missing' (candidate clearly does not have it based on constraints), and 'unknown' (not mentioned in profile, but possible).\n\nProfile:\n${JSON.stringify(profileData)}\n\nJob:\n${JSON.stringify(jobData)}`,
       schema: JobAnalysisSchema,
       schemaName: 'JobAnalysis'
+    });
+  }
+
+  async generateTailoredResume(profileData: unknown, jobData: unknown): Promise<TailoredResumeType> {
+    return this.provider.generateStructured<TailoredResumeType>({
+      prompt: `Generate a tailored resume based on the candidate's career profile and the target job description. Focus the summary and the bullet points on matching the job requirements. Keep it professional and factual; DO NOT invent experiences or skills that do not exist in the profile.\n\nProfile:\n${JSON.stringify(profileData)}\n\nJob:\n${JSON.stringify(jobData)}`,
+      schema: TailoredResumeSchema,
+      schemaName: 'TailoredResume'
+    });
+  }
+
+  async generateCoverLetter(profileData: unknown, jobData: unknown): Promise<CoverLetterType> {
+    return this.provider.generateStructured<CoverLetterType>({
+      prompt: `Write a compelling cover letter based on the candidate's profile and the target job description. The cover letter should highlight how the candidate's specific experiences align with the job requirements. Do not invent facts.\n\nProfile:\n${JSON.stringify(profileData)}\n\nJob:\n${JSON.stringify(jobData)}`,
+      schema: CoverLetterSchema,
+      schemaName: 'CoverLetter'
     });
   }
 }

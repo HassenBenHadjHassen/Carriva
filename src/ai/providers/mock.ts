@@ -44,6 +44,26 @@ export class MockAIProvider implements AIProvider {
       } as unknown as T;
     }
 
+    if (request.schemaName === 'TailoredResume') {
+      return {
+        summary: "Tailored full-stack engineer summary matching requirements.",
+        selectedSkills: ["React", "TypeScript", "Node.js"],
+        experience: [
+          {
+            experienceId: "mock-exp-1",
+            bullets: ["Built tailored mock features using React", "Reduced tailored latency using Node.js"]
+          }
+        ],
+        selectedProjects: ["mock-proj-1"]
+      } as unknown as T;
+    }
+
+    if (request.schemaName === 'CoverLetter') {
+      return {
+        content: "Dear Hiring Manager,\n\nI am writing to express my interest in the Next.js Developer position. My experience with React and Node.js makes me a great fit.\n\nSincerely,\nMock User"
+      } as unknown as T;
+    }
+
     return {} as T;
   }
 

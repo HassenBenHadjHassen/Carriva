@@ -113,5 +113,12 @@ E2E (PDF generation): `npm run test:e2e`
 ## 10. Known Limitations (MVP phase)
 
 - **Authentication**: Stubbed for MVP. Real implementations should use Auth.js or Better Auth.
-- **Visual PDF Render**: The Next.js `app` router will require a reliable PDF microservice (like Puppeteer/Playwright headless) to render the raw HTML templates accurately to A4 format.
+- **Visual PDF Render**: Implemented using a headless `puppeteer` instance in `download-pdf` route. Ensure the deployment environment supports Chromium execution.
 - **Rate Limits**: The mock provider is instant, but real providers will need queue management (BullMQ/Redis) to handle rate limits in production smoothly.
+
+## 11. Hardening Pass Updates
+
+- **AI Orchestration**: Fully provider-independent with OpenAI and Anthropic implementations. Strict fallbacks throw errors instead of hallucinating.
+- **Deterministic Skill Matching**: Uses normalized aliases without LLM intervention to avoid hallucination.
+- **Template Rendering**: Uses `cheerio` to inject structured data safely into the exact provided HTML template.
+- **Deduplication**: Job descriptions and artifacts are cached deterministically with versioning.

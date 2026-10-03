@@ -11,6 +11,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing applicationId' }, { status: 400 });
     }
 
+    const { prisma } = await import('../../../lib/prisma');
+    const application = await prisma.application.findUnique({ where: { id: applicationId } });
+    if (!application || application.userId !== user.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+    }
+
     const document = await resumeService.generateTailoredResumeData(applicationId);
 
     return NextResponse.json({ success: true, document });

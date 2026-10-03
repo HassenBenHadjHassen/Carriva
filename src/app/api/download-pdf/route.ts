@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { resumeService } from '../../../resume/service';
 import { coverLetterService } from '../../../cover-letter/service';
 import { requireUser } from '../../../lib/auth';
+import puppeteer from 'puppeteer';
 
 export async function GET(req: NextRequest) {
   try {
@@ -11,6 +12,13 @@ export async function GET(req: NextRequest) {
 
     if (!applicationId) {
       return NextResponse.json({ error: 'Missing applicationId' }, { status: 400 });
+    }
+
+    // Security check: verify application ownership
+    const { prisma } = await import('../../../lib/prisma');
+    const application = await prisma.application.findUnique({ where: { id: applicationId } });
+    if (!application || application.userId !== user.id) {
+      return NextResponse.json({ error: 'Application not found or unauthorized' }, { status: 403 });
     }
 
     const cvHtml = await resumeService.renderResumeHtml(applicationId, 'default');
@@ -23,41 +31,38 @@ export async function GET(req: NextRequest) {
         <meta charset="utf-8">
         <title>Carriva Application Documents</title>
         <style>
-          body { font-family: 'Inter', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; color: #111; line-height: 1.6; }
-          .page-break { page-break-before: always; margin-top: 40px; padding-top: 40px; border-top: 1px solid #eee; }
-          h1 { font-size: 24px; font-weight: bold; margin-bottom: 16px; }
-          h2 { font-size: 18px; font-weight: 600; margin-top: 24px; margin-bottom: 12px; border-bottom: 1px solid #eaeaea; padding-bottom: 4px; }
-          h3 { font-size: 16px; font-weight: 600; margin-top: 16px; margin-bottom: 8px; }
-          p { margin-bottom: 12px; }
-          ul { margin-left: 20px; margin-bottom: 16px; }
-          li { margin-bottom: 6px; }
-          .document { background: white; padding: 40px; border: 1px solid #ccc; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 40px; border-radius: 8px; }
+          /* Inject base styles for printing */
           @media print {
-            .document { border: none; box-shadow: none; padding: 0; margin: 0; }
-            .page-break { border: none; }
-            body { padding: 0; }
+            .page-break { page-break-before: always; }
           }
         </style>
       </head>
       <body>
-        <div class="document">
-          ${cvHtml}
-        </div>
+        <div>${cvHtml}</div>
         <div class="page-break"></div>
-        <div class="document">
-          ${clHtml}
-        </div>
-        <script>
-          // Automatically open print dialog for PDF saving
-          window.onload = function() { window.print(); }
-        </script>
+        <div>${clHtml}</div>
       </body>
       </html>
     `;
 
-    return new NextResponse(fullHtml, {
+    // Render PDF with Puppeteer
+    const browser = await puppeteer.launch({ headless: true });
+    const page = await browser.newPage();
+    await page.setContent(fullHtml, { waitUntil: 'domcontentloaded' });
+    const pdfUint8Array = await page.pdf({ 
+      format: 'A4', 
+      printBackground: true, 
+      margin: { top: '0', right: '0', bottom: '0', left: '0' } 
+    });
+    await browser.close();
+
+    // Convert Uint8Array to Buffer for NextResponse
+    const pdfBuffer = Buffer.from(pdfUint8Array);
+
+    return new NextResponse(pdfBuffer, {
       headers: {
-        'Content-Type': 'text/html',
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': 'inline; filename="application-documents.pdf"',
       },
     });
 

@@ -1,26 +1,47 @@
 import { aiService } from '../ai/service';
-import { JobExtractionType } from '../ai/schemas';
 import { cacheService } from '../cache/redis';
 import { prisma } from '../lib/prisma';
+import { SCHEMA_VERSION, PROMPT_VERSION } from '../config/constants';
 import crypto from 'crypto';
 
 export class JobsService {
   /**
-   * Analyzes a raw job description and extracts structured requirements.
+   * Normalizes a job description to remove superficial differences.
+   */
+  private normalizeJobDescription(text: string): string {
+    return text
+      .trim()
+      .replace(/\r\n/g, '\n')
+      .replace(/\n+/g, '\n') // Collapse multiple newlines
+      .replace(/[ \t]+/g, ' ') // Collapse multiple spaces
+      .toLowerCase();
+  }
+
+  /**
+   * Analyzes a raw job description, deduplicates, and extracts structured requirements.
    */
   async analyzeJobDescription(userId: string, descriptionText: string) {
-    const textHash = crypto.createHash('sha256').update(descriptionText).digest('hex');
-    const cacheKey = `job:${textHash}:v1`;
+    const normalized = this.normalizeJobDescription(descriptionText);
+    const normalizedHash = crypto.createHash('sha256').update(normalized).digest('hex');
+    const modelName = process.env.AI_MODEL || 'default-model';
+    const cacheKey = `job:${normalizedHash}:${SCHEMA_VERSION}:${PROMPT_VERSION}:${modelName}`;
 
-    let jobData = await cacheService.get<JobExtractionType>(cacheKey);
+    // Deduplication check: See if this exact job description has been analyzed already
+    const existingJob = await prisma.job.findFirst({
+      where: { hash: normalizedHash },
+      include: { requirements: true }
+    });
 
-    if (!jobData) {
-      console.log(`[JobsService] Cache miss for Job Description. Extracting with AI...`);
-      jobData = await aiService.extractJob(descriptionText);
-      await cacheService.set(cacheKey, jobData, 60 * 60 * 24 * 7); // Cache for 7 days
-    } else {
-      console.log(`[JobsService] Cache hit for Job extraction.`);
+    if (existingJob) {
+      console.log(`[JobsService] Exact job already exists. Reusing Job ID: ${existingJob.id}`);
+      return existingJob;
     }
+
+    // Call AI Service (orchestration handled by cacheService getOrSet)
+    const jobData = await cacheService.getOrSet(cacheKey, async () => {
+      console.log(`[JobsService] Extracting Job Description with AI...`);
+      return await aiService.extractJob(descriptionText);
+    }, 60 * 60 * 24 * 30); // 30 days
 
     // Save Job and its Requirements to Prisma
     const job = await prisma.job.create({
@@ -29,9 +50,9 @@ export class JobsService {
         title: jobData.title,
         company: jobData.company,
         description: descriptionText,
-        hash: textHash,
+        hash: normalizedHash,
         requirements: {
-          create: (jobData.requirements || []).map((req) => ({
+          create: (jobData.requirements || []).map((req: any) => ({
             rawRequirement: req.skill,
             isMandatory: req.isMandatory
           }))
@@ -42,7 +63,6 @@ export class JobsService {
       }
     });
 
-    // We can also opportunistically link skills if we want, but we'll leave that to matching
     return job;
   }
 

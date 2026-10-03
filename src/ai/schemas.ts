@@ -52,3 +52,20 @@ export const JobAnalysisSchema = z.object({
 
 export type JobAnalysisType = z.infer<typeof JobAnalysisSchema>;
 
+export const TailoredResumeSchema = z.object({
+  summary: z.string(),
+  experience: z.array(z.object({
+    experienceId: z.string().describe("The ID of the experience from the career profile"),
+    bullets: z.array(z.string()).describe("Tailored bullet points for this specific job"),
+  })),
+  selectedSkills: z.array(z.string()),
+  selectedProjects: z.array(z.string()).describe("The IDs of the projects to include"),
+});
+
+export type TailoredResumeType = z.infer<typeof TailoredResumeSchema>;
+
+export const CoverLetterSchema = z.object({
+  content: z.string().describe("The full text of the cover letter, well-formatted with paragraphs."),
+});
+
+export type CoverLetterType = z.infer<typeof CoverLetterSchema>;
