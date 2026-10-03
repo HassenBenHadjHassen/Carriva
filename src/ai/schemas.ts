@@ -24,6 +24,13 @@ export const ProjectSchema = z.object({
 });
 
 export const ResumeProfileSchema = z.object({
+  contactInfo: z.object({
+    phone: z.string().optional(),
+    website: z.string().optional(),
+    github: z.string().optional(),
+    linkedin: z.string().optional(),
+    location: z.string().optional()
+  }).optional(),
   summary: z.string().optional(),
   totalYearsOfExperience: z.number().optional().describe("Total years of professional experience across all roles"),
   skills: z.array(z.string()),

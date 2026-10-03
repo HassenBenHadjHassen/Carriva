@@ -8,13 +8,15 @@ import { Loader2, Download, FileText, Mail } from "lucide-react"
 interface DocumentGeneratorProps {
   applicationId: string
   disabled: boolean
+  initialHasCV?: boolean
+  initialHasCoverLetter?: boolean
 }
 
-export function DocumentGenerator({ applicationId, disabled }: DocumentGeneratorProps) {
+export function DocumentGenerator({ applicationId, disabled, initialHasCV = false, initialHasCoverLetter = false }: DocumentGeneratorProps) {
   const [isGeneratingCV, setIsGeneratingCV] = useState(false)
   const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false)
-  const [cvResult, setCvResult] = useState<{ id: string } | null>(null)
-  const [coverLetterResult, setCoverLetterResult] = useState<{ id: string } | null>(null)
+  const [cvResult, setCvResult] = useState<{ id: string } | null>(initialHasCV ? { id: "cached" } : null)
+  const [coverLetterResult, setCoverLetterResult] = useState<{ id: string } | null>(initialHasCoverLetter ? { id: "cached" } : null)
   const [error, setError] = useState("")
 
   async function generateDocument(type: "cv" | "cover-letter") {
@@ -87,7 +89,7 @@ export function DocumentGenerator({ applicationId, disabled }: DocumentGenerator
               </Button>
             ) : (
               <div className="w-full mt-2 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-md">
-                Generated Successfully
+                Ready for Review
               </div>
             )}
           </div>
@@ -117,7 +119,7 @@ export function DocumentGenerator({ applicationId, disabled }: DocumentGenerator
               </Button>
             ) : (
               <div className="w-full mt-2 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-md">
-                Generated Successfully
+                Ready for Review
               </div>
             )}
           </div>

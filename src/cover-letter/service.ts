@@ -55,8 +55,15 @@ export class CoverLetterService {
 
     if (!generated) throw new Error("No generated cover letter found for this application");
 
-    const $ = await import('cheerio').then(m => m.load('<div style="font-family: \'Inter\', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; line-height: 1.6;"><p style="white-space: pre-wrap;"></p></div>'));
-    $('p').text(generated.content);
+    const $ = await import('cheerio').then(m => m.load('<div style="font-family: \'Inter\', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; line-height: 1.6; font-size: 14px; color: #333;"></div>'));
+    
+    const lines = generated.content.split(/
++/);
+    lines.forEach(line => {
+      if (line.trim()) {
+        $('div').append($('<p style="margin-bottom: 1em;"></p>').text(line.trim()));
+      }
+    });
 
     return $.html();
   }

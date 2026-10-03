@@ -49,7 +49,12 @@ export default async function ApplicationDetailsPage({ params }: { params: Promi
 
       <div className="grid gap-6 md:grid-cols-[1fr_300px]">
         <div className="space-y-6">
-          <DocumentGenerator applicationId={application.id} disabled={false} />
+          <DocumentGenerator 
+            applicationId={application.id} 
+            disabled={false} 
+            initialHasCV={application.generatedResumes.length > 0} 
+            initialHasCoverLetter={application.generatedCoverLetters.length > 0}
+          />
           
           <Card>
             <CardHeader>

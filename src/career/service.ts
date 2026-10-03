@@ -101,6 +101,20 @@ export class CareerService {
       }
     }
 
+    // 5. Update User Contact Info if provided
+    if (profileData.contactInfo) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          phone: profileData.contactInfo.phone || undefined,
+          website: profileData.contactInfo.website || undefined,
+          github: profileData.contactInfo.github || undefined,
+          linkedin: profileData.contactInfo.linkedin || undefined,
+          location: profileData.contactInfo.location || undefined,
+        }
+      });
+    }
+
     return profile;
   }
 }

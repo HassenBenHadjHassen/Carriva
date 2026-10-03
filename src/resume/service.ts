@@ -101,21 +101,37 @@ export class ResumeService {
         
         if (profile.user.email) {
           contactList.find('li').eq(0).find('a').text(profile.user.email).attr('href', `mailto:${profile.user.email}`);
+        } else {
+          contactList.find('li').eq(0).hide();
         }
         if (profile.user.phone) {
-          contactList.find('li').eq(1).find('a').text(profile.user.phone).attr('href', `tel:${profile.user.phone.replace(/\s/g, '')}`);
+          contactList.find('li').eq(1).find('a').text(profile.user.phone).attr('href', `tel:${profile.user.phone.replace(/\\s/g, '')}`);
+          contactList.find('li').eq(1).show();
+        } else {
+          contactList.find('li').eq(1).hide();
         }
         if (profile.user.website) {
           contactList.find('li').eq(2).find('a').text(profile.user.website).attr('href', profile.user.website);
+          contactList.find('li').eq(2).show();
+        } else {
+          contactList.find('li').eq(2).hide();
         }
         if (profile.user.github) {
           contactList.find('li').eq(3).find('a').text(profile.user.github).attr('href', profile.user.github);
+          contactList.find('li').eq(3).show();
+        } else {
+          contactList.find('li').eq(3).hide();
         }
         if (profile.user.linkedin) {
           contactList.find('li').eq(4).find('a').text(profile.user.linkedin).attr('href', profile.user.linkedin);
+          contactList.find('li').eq(4).show();
+        } else {
+          contactList.find('li').eq(4).hide();
         }
         if (profile.user.location) {
-          contactList.find('li.contact-availability').text(profile.user.location);
+          contactList.find('li.contact-availability').text(profile.user.location).show();
+        } else {
+          contactList.find('li.contact-availability').hide();
         }
 
         // Inject Summary
@@ -168,7 +184,7 @@ export class ResumeService {
         eduContainer.find('.edu-item').remove();
         for (const edu of profile.educations) {
           const eduDiv = $('<div class="edu-item"></div>');
-          const title = isFr ? `${edu.degree} en ${edu.field}` : `${edu.degree} in ${edu.field}`;
+          const title = edu.field ? (isFr ? `${edu.degree} en ${edu.field}` : `${edu.degree} in ${edu.field}`) : edu.degree;
           eduDiv.append($('<strong></strong>').text(title));
           eduDiv.append($('<span></span>').text(`${edu.institution} · ${edu.startDate} - ${edu.endDate || (isFr ? 'Présent' : 'Present')}`));
           eduContainer.append(eduDiv);
