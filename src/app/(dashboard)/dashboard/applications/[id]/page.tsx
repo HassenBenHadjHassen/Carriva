@@ -7,6 +7,7 @@ import { DocumentGenerator } from "@/components/DocumentGenerator"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 import { DiscardApplicationButton } from "@/components/DiscardApplicationButton"
+import { StatusSelector } from "@/components/StatusSelector"
 
 export default async function ApplicationDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser()
@@ -39,9 +40,7 @@ export default async function ApplicationDetailsPage({ params }: { params: Promi
             <p className="text-xl text-muted-foreground mt-1">{application.job?.company || "Unknown Company"}</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold ${application.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-secondary text-secondary-foreground'}`}>
-              {application.status === 'completed' ? 'Completed' : 'Draft'}
-            </span>
+            <StatusSelector applicationId={application.id} initialStatus={application.status} />
             <DiscardApplicationButton applicationId={application.id} shouldRedirect={true} />
           </div>
         </div>
@@ -92,8 +91,8 @@ export default async function ApplicationDetailsPage({ params }: { params: Promi
                 <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium leading-none mb-1">Status</p>
-                  <p className="text-sm text-muted-foreground">
-                    {application.status === 'completed' ? 'Ready to apply' : 'Incomplete'}
+                  <p className="text-sm text-muted-foreground capitalize">
+                    {application.status}
                   </p>
                 </div>
               </div>

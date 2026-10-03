@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { DiscardApplicationButton } from "@/components/DiscardApplicationButton"
+import { STATUSES, AppStatus } from "@/components/StatusSelector"
 import { FileText, Plus, Clock, Briefcase } from "lucide-react"
 
 export default async function DashboardPage() {
@@ -57,8 +58,8 @@ export default async function DashboardPage() {
             <Card key={app.id} className="flex flex-col hover:border-primary/50 transition-colors">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start mb-2">
-                  <Badge variant={app.status === 'completed' ? 'default' : 'secondary'} className={app.status === 'completed' ? 'bg-green-100 text-green-800 hover:bg-green-100' : ''}>
-                    {app.status === 'completed' ? 'Completed' : 'Draft'}
+                  <Badge className={(STATUSES.find(s => s.value === app.status) ?? STATUSES[0]).color + ' hover:opacity-80'}>
+                    {app.status}
                   </Badge>
                   <span className="text-xs text-muted-foreground flex items-center gap-1">
                     <Clock className="h-3 w-3" />
