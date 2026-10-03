@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { DiscardApplicationButton } from "@/components/DiscardApplicationButton"
-import { STATUSES, AppStatus } from "@/components/StatusSelector"
+import { STATUSES, AppStatus } from "@/lib/statuses"
 import { FileText, Plus, Clock, Briefcase } from "lucide-react"
 
 export default async function DashboardPage() {
