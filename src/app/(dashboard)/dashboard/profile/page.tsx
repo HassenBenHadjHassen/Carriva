@@ -39,7 +39,7 @@ export default async function ProfilePage() {
             Upload your existing CV to generate your master career profile. This will be used as the factual basis for all your tailored applications.
           </p>
           <div className="w-full text-left">
-            <UploadForm onProfileCreated={() => {}} />
+            <UploadForm />
           </div>
         </Card>
       ) : (

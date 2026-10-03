@@ -6,10 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/
 import { Button } from "./ui/button"
 
 interface UploadFormProps {
-  onProfileCreated: (profileId: string) => void
+  onProfileCreated?: (profileId: string) => void
 }
 
-export function UploadForm({ onProfileCreated }: UploadFormProps) {
+export function UploadForm({ onProfileCreated }: UploadFormProps = {}) {
   const [isUploading, setIsUploading] = useState(false)
   const [message, setMessage] = useState("")
   const [success, setSuccess] = useState(false)
@@ -39,7 +39,9 @@ export function UploadForm({ onProfileCreated }: UploadFormProps) {
 
       setSuccess(true)
       setMessage("CV successfully extracted.")
-      onProfileCreated(data.profileId)
+      if (onProfileCreated) {
+        onProfileCreated(data.profileId)
+      }
     } catch (error: unknown) {
       setMessage(error instanceof Error ? error.message : String(error))
     } finally {
