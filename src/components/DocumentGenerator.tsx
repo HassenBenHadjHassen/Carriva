@@ -20,6 +20,40 @@ export function DocumentGenerator({ applicationId, disabled, initialHasCV = fals
   const [cvResult, setCvResult] = useState<any | null>(initialHasCV ? { id: "cached" } : null)
   const [coverLetterResult, setCoverLetterResult] = useState<any | null>(initialHasCoverLetter ? { id: "cached" } : null)
   const [error, setError] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
+
+  async function handleSave(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    if (!cvResult || !cvResult.id) return
+    setIsSaving(true)
+    setError("")
+
+    const formData = new FormData(e.currentTarget)
+    const parsedOriginal = JSON.parse(cvResult.content)
+    
+    const updatedContent = {
+       ...parsedOriginal,
+       summary: formData.get("summary") as string,
+       experience: parsedOriginal.experience.map((exp: any) => ({
+          ...exp,
+          bullets: exp.bullets.map((_: any, j: number) => formData.get(`experience-${exp.experienceId}-bullet-${j}`) as string)
+       }))
+    }
+
+    try {
+      const res = await fetch('/api/update-cv', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ generatedResumeId: cvResult.id, content: updatedContent })
+      })
+      if (!res.ok) throw new Error("Failed to save changes")
+      setCvResult({ ...cvResult, content: JSON.stringify(updatedContent) })
+    } catch(err: unknown) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setIsSaving(false)
+    }
+  }
 
   async function generateDocument(type: "cv" | "cover-letter") {
     const isCV = type === "cv"
@@ -110,10 +144,10 @@ export function DocumentGenerator({ applicationId, disabled, initialHasCV = fals
                   Ready for Review & Edit
                 </div>
                 {cvResult.content && (
-                  <div className="w-full text-left mt-4 text-sm max-h-[400px] overflow-y-auto pr-2 space-y-4">
+                  <form onSubmit={handleSave} className="w-full text-left mt-4 text-sm max-h-[400px] overflow-y-auto pr-2 space-y-4">
                     <div>
                       <h4 className="font-semibold text-xs mb-2 text-muted-foreground uppercase tracking-wider">Tailored Summary</h4>
-                      <Textarea defaultValue={JSON.parse(cvResult.content).summary} className="text-sm min-h-[100px]" />
+                      <Textarea name="summary" defaultValue={JSON.parse(cvResult.content).summary} className="text-sm min-h-[100px]" />
                     </div>
                     <div>
                       <h4 className="font-semibold text-xs mb-2 text-muted-foreground uppercase tracking-wider">Tailored Experiences</h4>
@@ -125,14 +159,17 @@ export function DocumentGenerator({ applicationId, disabled, initialHasCV = fals
                           </div>
                           <div className="space-y-2">
                             {exp.bullets.map((bullet: string, j: number) => (
-                              <Textarea key={j} defaultValue={bullet} className="text-sm min-h-[60px]" />
+                              <Textarea key={j} name={`experience-${exp.experienceId}-bullet-${j}`} defaultValue={bullet} className="text-sm min-h-[60px]" />
                             ))}
                           </div>
                         </div>
                       ))}
                     </div>
-                    <Button variant="secondary" className="w-full" size="sm">Save Changes</Button>
-                  </div>
+                    <Button type="submit" variant="secondary" className="w-full" size="sm" disabled={isSaving}>
+                      {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                      Save Changes
+                    </Button>
+                  </form>
                 )}
               </div>
             )}
