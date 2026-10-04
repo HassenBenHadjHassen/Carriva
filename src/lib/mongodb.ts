@@ -5,7 +5,10 @@ if (!process.env.DATABASE_URL && process.env.NODE_ENV !== 'test') {
 }
 
 const rawUri = process.env.DATABASE_URL || "mongodb://localhost:27017/test";
-const uri = rawUri.replace(/^["']|["']$/g, '');
+let uri = rawUri.replace(/^["']|["']$/g, '');
+if (!uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
+  uri = "mongodb://localhost:27017/test";
+}
 const options = {};
 
 let client: MongoClient;
