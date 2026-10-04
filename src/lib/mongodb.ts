@@ -4,7 +4,8 @@ if (!process.env.DATABASE_URL && process.env.NODE_ENV !== 'test') {
   console.warn('Missing environment variable: "DATABASE_URL"');
 }
 
-const uri = process.env.DATABASE_URL || "mongodb://localhost:27017/test";
+const rawUri = process.env.DATABASE_URL || "mongodb://localhost:27017/test";
+const uri = rawUri.replace(/^["']|["']$/g, '');
 const options = {};
 
 let client: MongoClient;
