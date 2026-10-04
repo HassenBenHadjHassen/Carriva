@@ -110,7 +110,7 @@ export function JobAnalysisForm({ profileId, onAnalysisComplete }: JobAnalysisFo
               <p className="text-lg font-semibold">{result.job.title} <span className="text-muted-foreground font-normal">at</span> {result.job.company}</p>
             </div>
             
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-2 rounded-lg border bg-card p-4">
                 <h3 className="text-sm font-semibold text-green-600 flex items-center gap-2">
                   <span className="flex h-2 w-2 rounded-full bg-green-600"></span>
@@ -133,6 +133,19 @@ export function JobAnalysisForm({ profileId, onAnalysisComplete }: JobAnalysisFo
                     )}
                   </div>
                 )}
+              </div>
+
+              <div className="space-y-2 rounded-lg border bg-card p-4">
+                <h3 className="text-sm font-semibold text-blue-600 flex items-center gap-2">
+                  <span className="flex h-2 w-2 rounded-full bg-blue-600"></span>
+                  Inferred from Experience
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {result.analysis.inferred?.length === 0 && <span className="text-xs text-muted-foreground">None identified</span>}
+                  {result.analysis.inferred?.map(skill => (
+                    <Badge key={skill} variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{skill}</Badge>
+                  ))}
+                </div>
               </div>
 
               <div className="space-y-2 rounded-lg border bg-card p-4">

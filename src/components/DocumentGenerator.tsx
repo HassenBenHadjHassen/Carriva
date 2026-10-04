@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "./ui/card"
 import { Button } from "./ui/button"
+import { Textarea } from "./ui/textarea"
 import { Loader2, Download, FileText, Mail } from "lucide-react"
 
 interface DocumentGeneratorProps {
@@ -16,8 +17,8 @@ export function DocumentGenerator({ applicationId, disabled, initialHasCV = fals
   const [isGeneratingCV, setIsGeneratingCV] = useState(false)
   const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
-  const [cvResult, setCvResult] = useState<{ id: string } | null>(initialHasCV ? { id: "cached" } : null)
-  const [coverLetterResult, setCoverLetterResult] = useState<{ id: string } | null>(initialHasCoverLetter ? { id: "cached" } : null)
+  const [cvResult, setCvResult] = useState<any | null>(initialHasCV ? { id: "cached" } : null)
+  const [coverLetterResult, setCoverLetterResult] = useState<any | null>(initialHasCoverLetter ? { id: "cached" } : null)
   const [error, setError] = useState("")
 
   async function generateDocument(type: "cv" | "cover-letter") {
@@ -104,8 +105,35 @@ export function DocumentGenerator({ applicationId, disabled, initialHasCV = fals
                 )}
               </Button>
             ) : (
-              <div className="w-full mt-2 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-md">
-                Ready for Review
+              <div className="w-full mt-4 text-left">
+                <div className="w-full mb-4 py-2 px-3 text-sm font-medium text-green-700 bg-green-100 rounded-md">
+                  Ready for Review & Edit
+                </div>
+                {cvResult.content && (
+                  <div className="w-full text-left mt-4 text-sm max-h-[400px] overflow-y-auto pr-2 space-y-4">
+                    <div>
+                      <h4 className="font-semibold text-xs mb-2 text-muted-foreground uppercase tracking-wider">Tailored Summary</h4>
+                      <Textarea defaultValue={JSON.parse(cvResult.content).summary} className="text-sm min-h-[100px]" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-xs mb-2 text-muted-foreground uppercase tracking-wider">Tailored Experiences</h4>
+                      {JSON.parse(cvResult.content).experience?.map((exp: any, i: number) => (
+                        <div key={i} className="mb-4 bg-muted/30 p-3 rounded-md border">
+                          <div className="font-medium text-[10px] text-muted-foreground mb-2 flex items-center justify-between">
+                            <span>Derived from Experience ID:</span>
+                            <code className="bg-muted px-1 py-0.5 rounded">{exp.experienceId.substring(0, 8)}...</code>
+                          </div>
+                          <div className="space-y-2">
+                            {exp.bullets.map((bullet: string, j: number) => (
+                              <Textarea key={j} defaultValue={bullet} className="text-sm min-h-[60px]" />
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <Button variant="secondary" className="w-full" size="sm">Save Changes</Button>
+                  </div>
+                )}
               </div>
             )}
           </div>

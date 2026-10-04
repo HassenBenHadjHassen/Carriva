@@ -7,20 +7,25 @@ Carriva is an AI-powered CV tailoring web application designed to help users ext
 - **CV Upload & Extraction**: Convert existing CVs into structured career profiles, automatically extracting work experience, education, skills, and contact information.
 - **Job Analysis**: Compare your profile against job descriptions to identify missing and matching skills.
 - **AI-Powered Tailoring**: Generate customized CVs and cover letters targeted to a specific job, with intelligent placeholder replacement.
-- **Provider Agnostic & Resilient**: Switch seamlessly between AI providers (Google, Anthropic, OpenAI, HuggingFace) or use a local Mock provider. Features an automatic fallback system (e.g., switches to HuggingFace if Google quota is exceeded).
+- **Provider Agnostic & Resilient**: Switch seamlessly between AI providers (Google, Anthropic, OpenAI, HuggingFace) or use a local Mock provider. Features an automatic fallback system that distinguishes between rate-limits/quota exhaustion and actual failures.
 - **Application Tracking**: Manage your job applications across different stages (Draft, Applied, Interview, Offer, Rejected, Archived) with color-coded status badges.
 - **High-Performance PDF Generation**: Fast, low-latency PDF downloads powered by a highly optimized Puppeteer browser singleton.
 - **Caching Layer**: Heavily caches AI responses (via Upstash Redis) and artifacts to optimize API costs and speed.
 
-## Tech Stack
+## Engineering & Architecture
 
-- **Framework**: [Next.js](https://nextjs.org/) (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Database**: MongoDB (via [Prisma ORM](https://www.prisma.io/))
-- **Authentication**: Better Auth (with MongoDB adapter)
-- **Cache**: [Upstash Redis](https://upstash.com/)
-- **Schema Validation**: Zod
+We built Carriva using modern production-grade engineering practices:
+
+- **Next.js App Router**: Optimized for server components and fast edge rendering.
+- **TypeScript**: End-to-end type safety.
+- **Prisma + MongoDB**: Flexible document model but strictly typed.
+- **Better Auth**: Seamless authentication integration.
+- **Redis/Upstash**: Powerful caching layer for AI responses and API rate limiting.
+- **Multi-provider AI abstraction**: Hot-swappable AI layer (Mock, Google, OpenAI, Anthropic, HuggingFace).
+- **Zod validation**: Runtime schema validation for all AI outputs and API boundaries.
+- **Deterministic skill matching**: Ensures AI does not hallucinate skills you don't possess.
+- **Puppeteer PDF rendering**: Fast, headless Chromium service for crisp PDF export.
+- **Automated CI/CD Tests**: Integrated GitHub Actions for linting and testing.
 
 ## Getting Started
 
@@ -62,4 +67,4 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Architecture
 
-For more detailed information regarding the database schema, caching strategy, and AI service orchestration, please see the `MVP_ARCHITECTURE.md` document in the parent workspace.
+For more detailed information regarding the database schema, caching strategy, and AI service orchestration, please see the `MVP_ARCHITECTURE.md` document in the root workspace.

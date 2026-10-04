@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       cvText = parsed.text;
       await parser.destroy();
     } else {
-      cvText = buffer.toString('utf-8');
+      return NextResponse.json({ error: 'Only PDF files are supported' }, { status: 400 });
     }
 
     if (!cvText || cvText.trim().length === 0) {

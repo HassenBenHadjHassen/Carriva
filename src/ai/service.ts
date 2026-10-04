@@ -39,9 +39,18 @@ export class AIService {
   private async executeWithFallback<T>(operation: (provider: AIProvider) => Promise<T>): Promise<T> {
     try {
       return await operation(this.provider);
-    } catch (error) {
-      if (this.fallbackProvider) {
-        console.warn(`[AIService] Primary provider failed, attempting fallback...`, error instanceof Error ? error.message : error);
+    } catch (error: any) {
+      const isAuthError = error?.status === 401 || error?.status === 403 || error?.message?.toLowerCase().includes('auth') || error?.message?.toLowerCase().includes('api key');
+      const isRateLimit = error?.status === 429 || error?.message?.toLowerCase().includes('rate limit') || error?.message?.toLowerCase().includes('quota');
+      const isServerError = error?.status >= 500 || error?.message?.toLowerCase().includes('server error') || error?.message?.toLowerCase().includes('timeout');
+      
+      if (isAuthError) {
+        console.error(`[AIService] Authentication error with primary provider, NOT falling back.`, error);
+        throw error;
+      }
+
+      if (this.fallbackProvider && (isRateLimit || isServerError || !error?.status)) {
+        console.warn(`[AIService] Primary provider failed (retryable/quota error), attempting fallback...`, error.message);
         return await operation(this.fallbackProvider);
       }
       throw error;

@@ -65,9 +65,15 @@ export class MatchingService {
     
     const analysis = await cacheService.getOrSet(cacheKey, async () => {
       const userSkills = profile.user?.userSkills || [];
-      const trustedSkills = new Set(
+      const matchedSkills = new Set(
         userSkills
-          .filter(us => ['confirmed', 'inferred', 'generated'].includes(us.confidence))
+          .filter(us => us.confidence === 'confirmed')
+          .map(us => this.normalizeSkill(us.skill.normalizedName))
+      );
+
+      const inferredSkills = new Set(
+        userSkills
+          .filter(us => ['inferred', 'generated'].includes(us.confidence))
           .map(us => this.normalizeSkill(us.skill.normalizedName))
       );
 
@@ -84,6 +90,7 @@ export class MatchingService {
       ].join(' ').toLowerCase();
 
       const matched: string[] = [];
+      const inferred: string[] = [];
       const missing: string[] = [];
       const unknown: string[] = [];
 
@@ -92,9 +99,12 @@ export class MatchingService {
         const normalizedReq = this.normalizeSkill(rawReq);
         const lowerReq = normalizedReq.toLowerCase();
         
-        if (trustedSkills.has(normalizedReq)) {
+        if (matchedSkills.has(normalizedReq)) {
           matched.push(rawReq);
         } 
+        else if (inferredSkills.has(normalizedReq)) {
+          inferred.push(rawReq);
+        }
         else if (rejectedSkills.has(normalizedReq)) {
           missing.push(rawReq);
         }
@@ -147,6 +157,7 @@ export class MatchingService {
 
       return {
         matched,
+        inferred,
         missing,
         unknown,
         meetsExperience,

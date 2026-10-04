@@ -55,7 +55,8 @@ export const JobExtractionSchema = z.object({
 export type JobExtractionType = z.infer<typeof JobExtractionSchema>;
 
 export const JobAnalysisSchema = z.object({
-  matched: z.array(z.string()).describe("Skills present in both profile and job"),
+  matched: z.array(z.string()).describe("Skills present in both profile and job (explicitly listed)"),
+  inferred: z.array(z.string()).describe("Skills inferred from user's experiences or other skills"),
   missing: z.array(z.string()).describe("Skills definitely missing from profile"),
   unknown: z.array(z.string()).describe("Skills where it is unclear if the user has them"),
   meetsEducation: z.boolean().optional().describe("True if the user meets the education requirements"),
