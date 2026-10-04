@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from "./ui/button"
 import { Textarea } from "./ui/textarea"
 import { Loader2, Download, FileText, Mail } from "lucide-react"
+import { TailoredResumeType } from "../ai/schemas"
 
 interface DocumentGeneratorProps {
   applicationId: string
@@ -17,8 +18,14 @@ export function DocumentGenerator({ applicationId, disabled, initialHasCV = fals
   const [isGeneratingCV, setIsGeneratingCV] = useState(false)
   const [isGeneratingCoverLetter, setIsGeneratingCoverLetter] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
-  const [cvResult, setCvResult] = useState<any | null>(initialHasCV ? { id: "cached" } : null)
-  const [coverLetterResult, setCoverLetterResult] = useState<any | null>(initialHasCoverLetter ? { id: "cached" } : null)
+  
+  interface DocumentResult {
+    id: string;
+    content: string;
+  }
+  
+  const [cvResult, setCvResult] = useState<DocumentResult | null>(initialHasCV ? { id: "cached", content: "" } : null)
+  const [coverLetterResult, setCoverLetterResult] = useState<DocumentResult | null>(initialHasCoverLetter ? { id: "cached", content: "" } : null)
   const [error, setError] = useState("")
   const [isSaving, setIsSaving] = useState(false)
 
@@ -29,14 +36,14 @@ export function DocumentGenerator({ applicationId, disabled, initialHasCV = fals
     setError("")
 
     const formData = new FormData(e.currentTarget)
-    const parsedOriginal = JSON.parse(cvResult.content)
+    const parsedOriginal = JSON.parse(cvResult.content) as TailoredResumeType
     
-    const updatedContent = {
+    const updatedContent: TailoredResumeType = {
        ...parsedOriginal,
        summary: formData.get("summary") as string,
-       experience: parsedOriginal.experience.map((exp: any) => ({
+       experience: parsedOriginal.experience.map(exp => ({
           ...exp,
-          bullets: exp.bullets.map((_: any, j: number) => formData.get(`experience-${exp.experienceId}-bullet-${j}`) as string)
+          bullets: exp.bullets.map((_, j) => formData.get(`experience-${exp.experienceId}-bullet-${j}`) as string)
        }))
     }
 
@@ -105,6 +112,8 @@ export function DocumentGenerator({ applicationId, disabled, initialHasCV = fals
     }
   }
 
+  const parsedCV: TailoredResumeType | null = cvResult?.content ? JSON.parse(cvResult.content) : null;
+
   return (
     <Card>
       <CardHeader>
@@ -143,22 +152,22 @@ export function DocumentGenerator({ applicationId, disabled, initialHasCV = fals
                 <div className="w-full mb-4 py-2 px-3 text-sm font-medium text-green-700 bg-green-100 rounded-md">
                   Ready for Review & Edit
                 </div>
-                {cvResult.content && (
+                {parsedCV && (
                   <form onSubmit={handleSave} className="w-full text-left mt-4 text-sm max-h-[400px] overflow-y-auto pr-2 space-y-4">
                     <div>
                       <h4 className="font-semibold text-xs mb-2 text-muted-foreground uppercase tracking-wider">Tailored Summary</h4>
-                      <Textarea name="summary" defaultValue={JSON.parse(cvResult.content).summary} className="text-sm min-h-[100px]" />
+                      <Textarea name="summary" defaultValue={parsedCV.summary} className="text-sm min-h-[100px]" />
                     </div>
                     <div>
                       <h4 className="font-semibold text-xs mb-2 text-muted-foreground uppercase tracking-wider">Tailored Experiences</h4>
-                      {JSON.parse(cvResult.content).experience?.map((exp: any, i: number) => (
+                      {parsedCV.experience?.map((exp, i) => (
                         <div key={i} className="mb-4 bg-muted/30 p-3 rounded-md border">
                           <div className="font-medium text-[10px] text-muted-foreground mb-2 flex items-center justify-between">
                             <span>Derived from Experience ID:</span>
                             <code className="bg-muted px-1 py-0.5 rounded">{exp.experienceId.substring(0, 8)}...</code>
                           </div>
                           <div className="space-y-2">
-                            {exp.bullets.map((bullet: string, j: number) => (
+                            {exp.bullets.map((bullet, j) => (
                               <Textarea key={j} name={`experience-${exp.experienceId}-bullet-${j}`} defaultValue={bullet} className="text-sm min-h-[60px]" />
                             ))}
                           </div>
