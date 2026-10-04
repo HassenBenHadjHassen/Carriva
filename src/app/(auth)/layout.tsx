@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { Button } from "../../components/ui/button"
-import { ArrowLeft, Briefcase } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
+import { Logo } from "../../components/ui/Logo"
 
 export default function AuthLayout({
   children,
@@ -16,9 +17,9 @@ export default function AuthLayout({
       </Link>
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center space-y-2 text-center">
-          <div className="rounded-full bg-primary/10 p-3 mb-2">
-            <Briefcase className="h-6 w-6 text-primary" />
-          </div>
+          <Link href="/" className="mb-3 transition-opacity hover:opacity-90">
+            <Logo className="h-9 w-auto" />
+          </Link>
           <h1 className="text-2xl font-semibold tracking-tight">Welcome to Carriva</h1>
           <p className="text-sm text-muted-foreground">
             Sign in or create an account to continue.

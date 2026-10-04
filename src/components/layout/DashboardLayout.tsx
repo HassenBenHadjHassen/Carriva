@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { FileText, Briefcase, Settings, LogOut, Loader2, Home } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { authClient } from "../../lib/auth-client"
+import { Logo } from "../ui/Logo"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -52,9 +53,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Sidebar */}
       <div className="hidden w-64 flex-col border-r bg-muted/30 md:flex">
         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <Briefcase className="h-5 w-5 text-primary" />
-            <span className="">Carriva</span>
+          <Link href="/" className="flex items-center text-foreground transition-opacity hover:opacity-90">
+            <Logo className="h-6 w-auto" />
           </Link>
         </div>
         <div className="flex-1 overflow-auto py-2">
@@ -94,9 +94,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Mobile Header */}
       <div className="flex flex-col md:hidden">
         <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <Briefcase className="h-5 w-5 text-primary" />
-            <span className="">Carriva</span>
+          <Link href="/" className="flex items-center text-foreground transition-opacity hover:opacity-90">
+            <Logo className="h-6 w-auto" />
           </Link>
           <nav className="ml-auto flex items-center gap-4 text-sm font-medium">
             {navigation.map((item) => (

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 38" width="170" height="38" fill="none">
+  <defs>
+    <linearGradient id="carrivaPrimaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="45%" stop-color="#2563EB" />
+      <stop offset="100%" stop-color="#6366F1" />
+    </linearGradient>
+    <linearGradient id="carrivaFullGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0284C7" />
+      <stop offset="35%" stop-color="#2563EB" />
+      <stop offset="85%" stop-color="#4F46E5" />
+      <stop offset="100%" stop-color="#7C3AED" />
+    </linearGradient>
+  </defs>
+  <text 
+    x="2" 
+    y="29" 
+    font-family="system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" 
+    font-size="33" 
+    font-weight="800" 
+    letter-spacing="-0.03em"
+  >
+    <tspan fill="url(#carrivaPrimaryGrad)">C</tspan><tspan fill="#FFFFFF">arriva</tspan>
+  </text>
+</svg>

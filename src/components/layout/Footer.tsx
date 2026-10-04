@@ -1,14 +1,13 @@
 import Link from "next/link"
-import { Briefcase } from "lucide-react"
+import { Logo } from "../ui/Logo"
 
 export function Footer() {
   return (
     <footer className="border-t bg-muted/40 py-12 md:py-16">
       <div className="container mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 px-4 md:flex-row md:items-start">
         <div className="flex flex-col gap-2">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <Briefcase className="h-5 w-5 text-primary" />
-            <span>Carriva</span>
+          <Link href="/" className="flex items-center text-foreground transition-opacity hover:opacity-90">
+            <Logo className="h-6 w-auto" />
           </Link>
           <p className="text-sm text-muted-foreground">
             Precision CV tailoring for modern professionals.
