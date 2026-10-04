@@ -60,7 +60,6 @@ export class MatchingService {
       throw new Error("Profile or Job not found");
     }
 
-    const { MATCHING_VERSION } = await import('../config/constants');
     const cacheKey = `match:${profile.userId}:${profile.id}:${profile.version}:${job.hash}:${MATCHING_VERSION}`;
     
     const analysis = await cacheService.getOrSet(cacheKey, async () => {

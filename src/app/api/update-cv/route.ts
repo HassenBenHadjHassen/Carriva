@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireUser } from '../../../lib/auth';
 import { prisma } from '../../../lib/prisma';
 import { handleApiError } from '../../../lib/api-response';
+import { TailoredResumeSchema } from '../../../ai/schemas';
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,6 +11,11 @@ export async function POST(req: NextRequest) {
 
     if (!generatedResumeId || !content) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const validationResult = TailoredResumeSchema.safeParse(content);
+    if (!validationResult.success) {
+      return NextResponse.json({ error: 'Invalid content format', details: validationResult.error }, { status: 400 });
     }
 
     // Verify ownership

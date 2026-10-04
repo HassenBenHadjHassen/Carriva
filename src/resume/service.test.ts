@@ -41,7 +41,7 @@ describe('ResumeService HTML Injection', () => {
 
     vi.mocked(prisma.application.findUnique).mockResolvedValueOnce({
       profile: {
-        user: { name: 'Test' },
+        user: { name: 'Test', updatedAt: new Date() },
         experiences: [
           { id: 'exp-1', role: 'Dev', company: 'Corp', bullets: [] }
         ],
@@ -55,9 +55,9 @@ describe('ResumeService HTML Injection', () => {
 
     const html = await resumeService.renderResumeHtml('app-1', 'default');
     
-    // We expect cheerio .text() to escape the malicious input
-    expect(html).not.toContain('<script>');
-    expect(html).toContain('&lt;script&gt;alert("hacked")&lt;/script&gt;');
+    // We expect react-dom/server to escape the malicious input
+    expect(html).not.toContain('<script>alert("hacked")</script>');
+    expect(html).toContain('&lt;script&gt;alert(&quot;hacked&quot;)&lt;/script&gt;');
     
     expect(html).not.toContain('<img src=x onerror=alert(1)>');
     expect(html).toContain('&lt;img src=x onerror=alert(1)&gt;');

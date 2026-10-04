@@ -67,5 +67,5 @@ An intelligent fallback mechanism distinguishes between actual model failures/au
 
 - **AI Orchestration**: Fully provider-independent with strict fallbacks.
 - **Deterministic Skill Matching**: Uses normalized aliases without LLM intervention. Differentiates between 'matched', 'inferred', 'missing', and 'unknown'.
-- **Template Rendering**: Uses `cheerio` to inject structured data safely.
+- **Template Rendering**: Uses `react-dom/server` to render and inject structured data safely.
 - **Deduplication**: Job descriptions and generated artifacts are cached deterministically.

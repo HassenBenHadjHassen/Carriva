@@ -5,6 +5,7 @@ import { cacheService } from '../cache/redis';
 import { cacheKeys } from '../cache/keys';
 import { TEMPLATE_VERSION, PROMPT_VERSION } from '../config/constants';
 import React from 'react';
+import ReactDOMServer from 'react-dom/server';
 import { ResumeTemplate } from '../components/ResumeTemplate';
 import fs from 'fs/promises';
 import path from 'path';
@@ -80,14 +81,12 @@ export class ResumeService {
       
       let imageBase64 = '';
       try {
-        const imgPath = path.join(process.cwd(), 'template', 'assets/hassen-ben-hadj-hassen.png');
+        const imgPath = path.join(process.cwd(), 'template', `assets/${profile.user.id}.png`);
         const imgData = await fs.readFile(imgPath);
         imageBase64 = imgData.toString('base64');
       } catch (e) {
-        console.error("Failed to read inline image", e);
+        // Image is optional
       }
-
-      const ReactDOMServer = eval('require("react-dom/server")');
       
       const markup = ReactDOMServer.renderToStaticMarkup(
         React.createElement(ResumeTemplate, {
