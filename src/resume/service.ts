@@ -5,7 +5,6 @@ import { cacheService } from '../cache/redis';
 import { cacheKeys } from '../cache/keys';
 import { TEMPLATE_VERSION, PROMPT_VERSION } from '../config/constants';
 import React from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { ResumeTemplate } from '../components/ResumeTemplate';
 import fs from 'fs/promises';
 import path from 'path';
@@ -88,7 +87,9 @@ export class ResumeService {
         console.error("Failed to read inline image", e);
       }
 
-      const markup = renderToStaticMarkup(
+      const ReactDOMServer = eval('require("react-dom/server")');
+      
+      const markup = ReactDOMServer.renderToStaticMarkup(
         React.createElement(ResumeTemplate, {
           profile,
           content,

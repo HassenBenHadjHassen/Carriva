@@ -20,7 +20,7 @@ describe('Cache Key Isolation', () => {
   });
   
   it('template version should invalidate HTML cache', () => {
-    const htmlKey = cacheKeys.htmlRender('resume-id');
+    const htmlKey = cacheKeys.htmlRender('resume-id', new Date());
     expect(htmlKey).toContain(TEMPLATE_VERSION);
   });
 });

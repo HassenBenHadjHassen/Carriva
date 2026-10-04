@@ -3,7 +3,6 @@ import { resumeService } from './service';
 import { cacheService } from '../cache/redis';
 import { prisma } from '../lib/prisma';
 import fs from 'fs/promises';
-import * as cheerio from 'cheerio';
 
 vi.mock('../lib/prisma', () => ({
   prisma: {
@@ -51,15 +50,8 @@ describe('ResumeService HTML Injection', () => {
       }
     } as any);
 
-    vi.mocked(fs.readFile).mockResolvedValueOnce(`
-      <div id="cv-en">
-        <div class="profile-text"></div>
-        <div class="section"><article class="experience"></article></div>
-        <aside class="sidebar"><div class="side-block"><div class="edu-item"></div></div></aside>
-        <div class="project-list"></div>
-      </div>
-      <div id="cv-fr"></div>
-    `);
+    vi.mocked(fs.readFile).mockResolvedValueOnce('body {}'); // For CSS mock
+    vi.mocked(fs.readFile).mockResolvedValueOnce('fake-image-data'); // For image mock
 
     const html = await resumeService.renderResumeHtml('app-1', 'default');
     
