@@ -1,4 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface StructuredGenerationRequest<T> {
   prompt: string;
   systemPrompt?: string;

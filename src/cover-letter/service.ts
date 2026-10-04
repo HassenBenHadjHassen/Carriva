@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
 import { aiService } from '../ai/service';
+import { generateCoverLetter } from '../ai/cover-letter';
 import { getActiveModelName } from '../ai/config';
 import { cacheService } from '../cache/redis';
 import { cacheKeys } from '../cache/keys';
@@ -43,7 +44,7 @@ export class CoverLetterService {
 
     const coverLetterData = await cacheService.getOrSet(cacheKey, async () => {
       const analysis = await aiService.analyzeMatch(application.userId, { ...profileWithoutUser, userContactInfo }, application.job);
-      return await aiService.generateCoverLetter(application.userId, { ...profileWithoutUser, userContactInfo }, application.job, analysis);
+      return await generateCoverLetter(application.userId, { ...profileWithoutUser, userContactInfo }, application.job, analysis);
     }, 60 * 60 * 24 * 7); // 7 days
 
     const generated = await prisma.generatedCoverLetter.create({

@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma';
 import { aiService } from '../ai/service';
+import { generateTailoredResume } from '../ai/resume';
 import { getActiveModelName } from '../ai/config';
 import { cacheService } from '../cache/redis';
 import { cacheKeys } from '../cache/keys';
@@ -37,7 +38,7 @@ export class ResumeService {
     // Call AI Service (orchestration handled by aiService, caching by getOrSet)
     const tailoredData = await cacheService.getOrSet(cacheKey, async () => {
       const analysis = await aiService.analyzeMatch(application.userId, application.profile, application.job);
-      return await aiService.generateTailoredResume(application.userId, application.profile, application.job, analysis);
+      return await generateTailoredResume(application.userId, application.profile, application.job, analysis);
     }, 60 * 60 * 24 * 7); // 7 days
 
     const generated = await prisma.generatedResume.create({
