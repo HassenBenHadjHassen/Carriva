@@ -50,6 +50,9 @@ export const JobExtractionSchema = z.object({
   })),
   minimumEducation: z.string().optional().describe("e.g. 'Bachelor's degree in Computer Science'"),
   minimumYearsOfExperience: z.number().optional().describe("Minimum years of professional experience required"),
+  keyPhrases: z.array(z.string()).optional(),
+  stressedValues: z.array(z.string()).optional(),
+  seniority: z.string().optional(),
 });
 
 export type JobExtractionType = z.infer<typeof JobExtractionSchema>;
@@ -73,6 +76,8 @@ export const TailoredResumeSchema = z.object({
   })),
   selectedSkills: z.array(z.string()),
   selectedProjects: z.array(z.string()).describe("The IDs of the projects to include"),
+  changeLog: z.array(z.object({ change: z.string(), requirement: z.string() })).optional(),
+  questionsForCandidate: z.array(z.string()).optional(),
 });
 
 export type TailoredResumeType = z.infer<typeof TailoredResumeSchema>;

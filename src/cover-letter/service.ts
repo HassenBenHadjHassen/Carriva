@@ -42,7 +42,8 @@ export class CoverLetterService {
     };
 
     const coverLetterData = await cacheService.getOrSet(cacheKey, async () => {
-      return await aiService.generateCoverLetter(application.userId, { ...profileWithoutUser, userContactInfo }, application.job);
+      const analysis = await aiService.analyzeMatch(application.userId, { ...profileWithoutUser, userContactInfo }, application.job);
+      return await aiService.generateCoverLetter(application.userId, { ...profileWithoutUser, userContactInfo }, application.job, analysis);
     }, 60 * 60 * 24 * 7); // 7 days
 
     const generated = await prisma.generatedCoverLetter.create({
