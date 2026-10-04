@@ -80,6 +80,15 @@ export class ResumeService {
       
       const $ = cheerio.load(rawHtml);
 
+      const formatDate = (date: string | Date | null | undefined, isFr: boolean): string => {
+        if (!date || date === 'null') return isFr ? 'Présent' : 'Present';
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return String(date);
+        const formatter = new Intl.DateTimeFormat(isFr ? 'fr-FR' : 'en-US', { month: 'short', year: 'numeric' });
+        const formatted = formatter.format(d);
+        return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+      };
+
       const populateSection = (sectionId: string, isFr: boolean) => {
         const section = $(sectionId);
         if (!section.length) return;
@@ -149,7 +158,7 @@ export class ResumeService {
         }
 
         // Experiences
-        const experienceContainer = section.find('.section:nth-of-type(2)');
+        const experienceContainer = section.find('.experience-section');
         experienceContainer.find('article.experience').remove(); // Clear template experiences
         
         const orderedExperiences = profile.experiences.slice().sort((a, b) => new Date(b.startDate || 0).getTime() - new Date(a.startDate || 0).getTime());
@@ -163,7 +172,7 @@ export class ResumeService {
           const titleRow = $('<div class="exp-title-row"></div>');
           
           titleRow.append($('<h3 class="exp-role"></h3>').text(exp.role));
-          titleRow.append($('<span class="exp-period"></span>').text(`${exp.startDate} - ${exp.endDate || (isFr ? 'Présent' : 'Present')}`));
+          titleRow.append($('<span class="exp-period"></span>').text(`${formatDate(exp.startDate, isFr)} - ${formatDate(exp.endDate, isFr)}`));
           
           header.append(titleRow);
           header.append($('<span class="exp-company"></span>').text(exp.company));
@@ -186,7 +195,7 @@ export class ResumeService {
           const eduDiv = $('<div class="edu-item"></div>');
           const title = edu.field ? (isFr ? `${edu.degree} en ${edu.field}` : `${edu.degree} in ${edu.field}`) : edu.degree;
           eduDiv.append($('<strong></strong>').text(title));
-          eduDiv.append($('<span></span>').text(`${edu.institution} · ${edu.startDate} - ${edu.endDate || (isFr ? 'Présent' : 'Present')}`));
+          eduDiv.append($('<span></span>').text(`${edu.institution} · ${formatDate(edu.startDate, isFr)} - ${formatDate(edu.endDate, isFr)}`));
           eduContainer.append(eduDiv);
         }
 
