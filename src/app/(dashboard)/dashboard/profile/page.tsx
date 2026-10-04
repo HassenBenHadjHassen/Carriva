@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { UploadForm } from "@/components/UploadForm"
 import { ContactInfoForm } from "@/components/ContactInfoForm"
+import { AvatarUploadForm } from "@/components/AvatarUploadForm"
 import { FileText, CheckCircle2 } from "lucide-react"
 
 export default async function ProfilePage() {
@@ -29,6 +30,8 @@ export default async function ProfilePage() {
         <h1 className="text-3xl font-bold tracking-tight">Career Profile</h1>
         <p className="text-muted-foreground mt-1">Manage your foundational career information.</p>
       </div>
+
+      <AvatarUploadForm initialImage={user.image} />
 
       <ContactInfoForm
         initialData={{

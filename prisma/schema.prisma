@@ -12,6 +12,7 @@ model User {
   authId    String?  @unique
   email     String   @unique
   name      String?
+  image     String?
   phone     String?
   website   String?
   github    String?

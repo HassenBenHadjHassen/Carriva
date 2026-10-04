@@ -81,9 +81,17 @@ export class ResumeService {
       
       let imageBase64 = '';
       try {
-        const imgPath = path.join(process.cwd(), 'template', `assets/${profile.user.id}.png`);
-        const imgData = await fs.readFile(imgPath);
-        imageBase64 = imgData.toString('base64');
+        if (profile.user.image) {
+          // Construct path from public dir since image URL is typically /avatars/filename.png
+          const publicPath = path.join(process.cwd(), 'public');
+          // Removing leading slash for path.join safely
+          const relPath = profile.user.image.startsWith('/') ? profile.user.image.substring(1) : profile.user.image;
+          const imgPath = path.join(publicPath, relPath);
+          const imgData = await fs.readFile(imgPath);
+          
+          // ResumeTemplate expects only the base64 payload, not the full data URI
+          imageBase64 = imgData.toString('base64');
+        }
       } catch (e) {
         // Image is optional
       }
