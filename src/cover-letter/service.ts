@@ -4,6 +4,8 @@ import { getActiveModelName } from '../ai/config';
 import { cacheService } from '../cache/redis';
 import { cacheKeys } from '../cache/keys';
 import { PROMPT_VERSION } from '../config/constants';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 export class CoverLetterService {
   async generateTailoredCoverLetter(applicationId: string) {
@@ -98,16 +100,15 @@ export class CoverLetterService {
       }
     }
 
-    const $ = await import('cheerio').then(m => m.load('<div style="font-family: \'Inter\', sans-serif; max-width: 800px; margin: 0 auto; padding: 40px; line-height: 1.6; font-size: 14px; color: #333;"></div>'));
+    const lines = content.split(/\n+/).filter((line: string) => line.trim());
     
-    const lines = content.split(/\n+/);
-    lines.forEach(line => {
-      if (line.trim()) {
-        $('div').append($('<p style="margin-bottom: 1em;"></p>').text(line.trim()));
-      }
-    });
+    const markup = renderToStaticMarkup(
+      React.createElement('div', { style: { fontFamily: "'Inter', sans-serif", maxWidth: '800px', margin: '0 auto', padding: '40px', lineHeight: '1.6', fontSize: '14px', color: '#333' } },
+        lines.map((line: string, i: number) => React.createElement('p', { key: i, style: { marginBottom: '1em' } }, line.trim()))
+      )
+    );
 
-    return $.html();
+    return markup;
   }
 }
 
