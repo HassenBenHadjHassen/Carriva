@@ -3,6 +3,7 @@ import { getActiveModelName } from '../ai/config';
 import { ResumeProfileType } from '../ai/schemas';
 import { cacheService } from '../cache/redis';
 import { prisma } from '../lib/prisma';
+import { SKILL_CONFIDENCE } from '../config/constants';
 import crypto from 'crypto';
 
 export class CareerService {
@@ -94,7 +95,7 @@ export class CareerService {
           create: {
             userId,
             skillId: skill.id,
-            confidence: 'inferred',
+            confidence: SKILL_CONFIDENCE.INFERRED,
             source: 'cv'
           }
         });

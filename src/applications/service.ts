@@ -2,7 +2,7 @@ import { prisma } from '../lib/prisma';
 import { matchingService } from '../matching/service';
 import { resumeService } from '../resume/service';
 import { coverLetterService } from '../cover-letter/service';
-
+import { APP_STATUS } from '../config/constants';
 import { jobsService } from '../jobs/service';
 
 export class ApplicationService {
@@ -33,7 +33,7 @@ export class ApplicationService {
             userId,
             profileId,
             jobId: job.id,
-            status: 'Analyzed'
+            status: APP_STATUS.ANALYZED
           }
         });
       } catch (error: unknown) {
@@ -55,12 +55,12 @@ export class ApplicationService {
     if (matchAnalysis.analysis.unknown.length > 0) {
       await prisma.application.update({
         where: { id: application.id },
-        data: { status: 'AwaitingConfirmation' }
+        data: { status: APP_STATUS.AWAITING_CONFIRMATION }
       });
     } else {
       await prisma.application.update({
         where: { id: application.id },
-        data: { status: 'Ready' }
+        data: { status: APP_STATUS.READY }
       });
     }
 
@@ -117,7 +117,7 @@ export class ApplicationService {
     // Update application status
     await prisma.application.update({
       where: { id: applicationId },
-      data: { status: 'Ready' }
+      data: { status: APP_STATUS.READY }
     });
 
     return true;
@@ -129,7 +129,7 @@ export class ApplicationService {
        throw new Error("Application not found or unauthorized");
     }
     
-    if (application.status !== 'Ready' && application.status !== 'Generated') {
+    if (application.status !== APP_STATUS.READY && application.status !== APP_STATUS.GENERATED) {
        throw new Error("Application is not in a valid state to generate documents");
     }
 
@@ -146,10 +146,10 @@ export class ApplicationService {
     // Transition state
     await prisma.application.update({
       where: { id: applicationId },
-      data: { status: 'Generated' }
+      data: { status: APP_STATUS.GENERATED }
     });
 
-    return { status: 'Generated', resumeData, coverLetterData };
+    return { status: APP_STATUS.GENERATED, resumeData, coverLetterData };
   }
 }
 

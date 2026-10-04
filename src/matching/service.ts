@@ -1,7 +1,7 @@
 import { prisma } from '../lib/prisma';
 import { aiService } from '../ai/service';
 import { cacheService } from '../cache/redis';
-import { MATCHING_VERSION } from '../config/constants';
+import { MATCHING_VERSION, SKILL_CONFIDENCE } from '../config/constants';
 
 export class MatchingService {
   /**
@@ -67,19 +67,19 @@ export class MatchingService {
       const userSkills = profile.user?.userSkills || [];
       const matchedSkills = new Set(
         userSkills
-          .filter(us => us.confidence === 'confirmed')
+          .filter(us => us.confidence === SKILL_CONFIDENCE.CONFIRMED)
           .map(us => this.normalizeSkill(us.skill.normalizedName))
       );
 
       const inferredSkills = new Set(
         userSkills
-          .filter(us => ['inferred', 'generated'].includes(us.confidence))
+          .filter(us => [SKILL_CONFIDENCE.INFERRED, SKILL_CONFIDENCE.GENERATED].includes(us.confidence as any))
           .map(us => this.normalizeSkill(us.skill.normalizedName))
       );
 
       const rejectedSkills = new Set(
         userSkills
-          .filter(us => us.confidence === 'rejected')
+          .filter(us => us.confidence === SKILL_CONFIDENCE.REJECTED)
           .map(us => this.normalizeSkill(us.skill.normalizedName))
       );
 
