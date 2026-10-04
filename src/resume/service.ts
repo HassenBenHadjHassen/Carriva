@@ -5,7 +5,6 @@ import { cacheService } from '../cache/redis';
 import { cacheKeys } from '../cache/keys';
 import { TEMPLATE_VERSION, PROMPT_VERSION } from '../config/constants';
 import React from 'react';
-import ReactDOMServer from 'react-dom/server';
 import { ResumeTemplate } from '../components/ResumeTemplate';
 import fs from 'fs/promises';
 import path from 'path';
@@ -95,6 +94,8 @@ export class ResumeService {
       } catch (e) {
         // Image is optional
       }
+      
+      const ReactDOMServer = (await import('react-dom/server')).default;
       
       const markup = ReactDOMServer.renderToStaticMarkup(
         React.createElement(ResumeTemplate, {
